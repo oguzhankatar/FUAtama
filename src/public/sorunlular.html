@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorunlular Sayfası</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .program-section {
+            margin-bottom: 30px;
+        }
+        .program-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            color: #333;
+        }
+        .program-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-left: 10px;
+        }
+        .program-count::before {
+            content: "(";
+        }
+        .program-count::after {
+            content: " ders)";
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .card.selected {
+            opacity: 0.7;
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: checkmark 0.3s ease-in-out;
+        }
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .dkodu-stripe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 45px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        .card p {
+            margin: 5px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #333;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+        .back-button:hover {
+            color: #0d6efd;
+        }
+        .student-count {
+            font-weight: bold;
+            color: #ffc107;
+        }
+        .complete-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            z-index: 1000;
+        }
+        .complete-button:hover {
+            background-color: #218838;
+        }
+        .complete-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+    <button id="completeButton" class="complete-button" disabled onclick="handleComplete()">
+        Tamamla
+    </button>
+    <div id="loading" class="loading">Yükleniyor...</div>
+    <div id="mainContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentDocumentId = null;
+        let cardData = [];
+        const dkoduColors = new Map();
+        const programColors = new Map();
+        let selectedCards = new Set();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastUploadDate = localStorage.getItem('lastUploadDate');
+            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
+                                      lastUploadDate === localStorage.getItem('currentUploadDate');
+
+            if (!isNinthBoxCompleted) {
+                alert('Sorunlular sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
+                window.location.href = 'lctr.html';
+                return;
+            }
+
+            fetchData();
+        });
+
+        function generateRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 40%)`;
+        }
+
+        function getColorForDkodu(dkodu) {
+            if (!dkoduColors.has(dkodu)) {
+                dkoduColors.set(dkodu, generateRandomColor());
+            }
+            return dkoduColors.get(dkodu);
+        }
+
+        function getColorForProgram(program) {
+            if (!programColors.has(program)) {
+                programColors.set(program, generateRandomColor());
+            }
+            return programColors.get(program);
+        }
+
+        function toggleCardSelection(card, index) {
+            card.classList.toggle('selected');
+            if (card.classList.contains('selected')) {
+                selectedCards.add(index);
+            } else {
+                selectedCards.delete(index);
+            }
+            document.getElementById('completeButton').disabled = selectedCards.size === 0;
+        }
+
+        function createCardElement(item, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            
+            const backgroundColor = getColorForProgram(item.program);
+            card.style.backgroundColor = backgroundColor;
+
+            // Create stripe div
+            const stripeDiv = document.createElement('div');
+            stripeDiv.className = 'dkodu-stripe';
+            stripeDiv.style.backgroundColor = getColorForDkodu(item.dkodu);
+            card.appendChild(stripeDiv);
+
+            // Create content container
+            const content = document.createElement('div');
+            const studentCount = item.ogrenciler ? item.ogrenciler.length : 0;
+            content.innerHTML = `
+                <h3>${item.dkodu}</h3>
+                <p><strong>Şube:</strong> ${item.sube}</p>
+                <p><strong>Ders Adı:</strong> ${item.dadi}</p>
+                <p><strong>Program:</strong> ${item.program}</p>
+                <p><strong>Kontenjan:</strong> ${item.kon}</p>
+                <p><strong>Öğrenci Sayısı:</strong> <span class="student-count">${studentCount}</span></p>
+            `;
+            card.appendChild(content);
+
+            card.addEventListener('click', () => toggleCardSelection(card, index));
+
+            return card;
+        }
+
+        async function handleComplete() {
+            if (selectedCards.size === 0) return;
+
+            try {
+                const selectedIndices = Array.from(selectedCards);
+                const selectedData = selectedIndices.map(index => cardData[index]);
+
+                // First save to sorunlu collection
+                const saveResponse = await fetch('/api/sorunlu', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(selectedData)
+                });
+
+                if (!saveResponse.ok) {
+                    throw new Error('Sorunlu dersleri kaydetme hatası');
+                }
+
+                // Then delete from lctrdata
+                const deleteResponse = await fetch(`/api/sorunlu/delete-cards/${currentDocumentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ indices: Array.from(selectedCards) })
+                });
+
+                if (!deleteResponse.ok) {
+                    throw new Error('Kartları silme hatası');
+                }
+
+                // Refresh the page after successful operation
+                window.location.reload();
+            } catch (error) {
+                console.error('İşlem hatası:', error);
+                alert(error.message || 'Bir hata oluştu!');
+            }
+        }
+
+        function createCards(data) {
+            cardData = [...data];
+            const mainContainer = document.getElementById('mainContainer');
+            mainContainer.innerHTML = '';
+
+            dkoduColors.clear();
+
+            const programGroups = cardData.reduce((groups, item) => {
+                const program = item.program || 'Diğer';
+                if (!groups[program]) {
+                    groups[program] = [];
+                }
+                groups[program].push(item);
+                return groups;
+            }, {});
+
+            const sortedPrograms = Object.keys(programGroups).sort();
+
+            sortedPrograms.forEach(program => {
+                const programSection = document.createElement('div');
+                programSection.className = 'program-section';
+
+                const programTitle = document.createElement('div');
+                programTitle.className = 'program-title';
+                programTitle.textContent = `${program} `;
+                
+                const cardCount = document.createElement('span');
+                cardCount.className = 'program-count';
+                cardCount.textContent = programGroups[program].length;
+                
+                programTitle.appendChild(cardCount);
+                programSection.appendChild(programTitle);
+
+                const cardsContainer = document.createElement('div');
+                cardsContainer.className = 'cards-container';
+
+                const sortedCards = programGroups[program].sort((a, b) => a.dkodu.localeCompare(b.dkodu));
+
+                sortedCards.forEach((item, index) => {
+                    const card = createCardElement(item, cardData.indexOf(item));
+                    cardsContainer.appendChild(card);
+                });
+
+                programSection.appendChild(cardsContainer);
+                mainContainer.appendChild(programSection);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/lctr/data');
+                const result = await response.json();
+                
+                if (result.length > 0 && result[0].data) {
+                    currentDocumentId = result[0]._id;
+                    createCards(result[0].data);
+                } else {
+                    document.getElementById('loading').textContent = 'Veri bulunamadı.';
+                }
+            } catch (error) {
+                console.error('Veri çekme hatası:', error);
+                document.getElementById('loading').textContent = 'Veri yüklenirken bir hata oluştu.';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

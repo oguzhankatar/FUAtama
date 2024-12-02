@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Verileri</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Previous styles remain exactly the same */
+        .table-container {
+            margin: 20px auto;
+            padding: 20px;
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+        .boxes-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            height: fit-content;
+            margin: 20px 0;
+        }
+        .red-box {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .red-box.deleting {
+            background-color: orange;
+        }
+        .red-box.completed {
+            background-color: #28a745;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            vertical-align: middle;
+        }
+        .btn-group {
+            gap: 10px;
+            display: flex;
+        }
+        .file-info {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .table-responsive {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .delete-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 8px;
+            font-size: 14px;
+            line-height: 1;
+            border: none;
+            padding: 0;
+            transition: background-color 0.15s ease;
+            background-color: #dc3545;
+        }
+        .delete-icon:hover {
+            background-color: #c82333;
+        }
+        .row-actions {
+            white-space: nowrap;
+            width: 1%;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-10px); }
+        }
+        .table-footer {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .row-count {
+            font-weight: 500;
+            color: #0d6efd;
+        }
+        .row-deleting {
+            animation: fadeOut 0.15s ease-out forwards;
+        }
+        .column-deleting {
+            animation: fadeOut 0.15s ease-out forwards;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 5px;
+        }
+        .header-text {
+            margin: 0;
+            font-weight: 500;
+        }
+        .actions-container {
+            display: flex;
+            gap: 5px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1050;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            color: #6c757d;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        .checkbox-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <div>
+                <h2 class="mb-0">Excel Verileri</h2>
+                <div id="fileInfo" class="file-info"></div>
+            </div>
+            <div class="actions-container">
+                <div class="btn-group">
+                    <a href="/std.html?force=true" class="btn btn-primary" onclick="localStorage.removeItem('firstBoxCompleted'); localStorage.removeItem('secondBoxCompleted'); localStorage.removeItem('thirdBoxCompleted'); localStorage.removeItem('fourthBoxCompleted'); localStorage.removeItem('fifthBoxCompleted'); localStorage.removeItem('sixthBoxCompleted');">Yeni Dosya Yükle</a>
+                    <button class="btn btn-secondary" onclick="window.location.reload()">Yenile</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="table-container">
+                <div id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+                <div id="tableContainer" class="table-responsive"></div>
+                <div id="tableFooter" class="table-footer">
+                    <div class="row-count">
+                        Toplam Satır: <span id="rowCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="boxesContainer" class="boxes-container">
+            </div>
+        </div>
+    </div>
+
+    <!-- Ders Modal -->
+    <div id="dersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ders Listesi</h5>
+                <button type="button" class="modal-close" onclick="closeModal('dersModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="dersCheckboxList" class="checkbox-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('dersModal')">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="saveDersSelection()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bölüm Modal -->
+    <div id="blmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bölüm Listesi</h5>
+                <button type="button" class="modal-close" onclick="closeModal('blmModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul id="blmCheckboxList" class="checkbox-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('blmModal')">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="saveBlmSelection()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDocumentId = null;
+        let totalRows = 0;
+
+        function createBoxes() {
+            const container = document.getElementById('boxesContainer');
+            container.innerHTML = '';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const isNewFileUpload = urlParams.get('force') === 'true';
+            
+            for (let i = 0; i < 100; i++) {
+                const box = document.createElement('div');
+                box.className = 'red-box';
+                if (!isNewFileUpload) {
+                    if (i === 0 && localStorage.getItem('firstBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    } else if (i === 1 && localStorage.getItem('secondBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    } else if (i === 2 && localStorage.getItem('thirdBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    } else if (i === 3 && localStorage.getItem('fourthBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    } else if (i === 4 && localStorage.getItem('fifthBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    } else if (i === 5 && localStorage.getItem('sixthBoxCompleted') === 'true') {
+                        box.classList.add('completed');
+                    }
+                }
+                box.onclick = () => handleBoxClick(box, i);
+                container.appendChild(box);
+            }
+        }
+
+        async function updateColumnNames(documentId, columnMappings) {
+            try {
+                console.log('Sütun güncelleme isteği:', { documentId, columnMappings });
+                const response = await fetch(`/api/data/${documentId}/rename-columns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ columnMappings })
+                });
+
+                const result = await response.json();
+                console.log('Sunucu yanıtı:', result);
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Sütun adları güncellenirken hata oluştu');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Sütun güncelleme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function addNewColumn(documentId, columnName, columnData) {
+            try {
+                const response = await fetch(`/api/data/${documentId}/add-column`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        columnName,
+                        columnData
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Sütun eklenirken hata oluştu');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Sütun ekleme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function updateDepartmentCodes(documentId) {
+            try {
+                const response = await fetch(`/api/data/${documentId}/update-department-codes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Bölüm kodları güncellenirken hata oluştu');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Bölüm kodu güncelleme hatası:', error);
+                throw error;
+            }
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        async function fetchUniqueDers() {
+            try {
+                const response = await fetch(`/api/data/${currentDocumentId}/unique-ders`);
+                const result = await response.json();
+                return result.uniqueDers;
+            } catch (error) {
+                console.error('Unique ders değerlerini getirme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function fetchUniqueBlm() {
+            try {
+                const response = await fetch(`/api/data/${currentDocumentId}/unique-blm`);
+                const result = await response.json();
+                return result.uniqueBlm;
+            } catch (error) {
+                console.error('Unique blm değerlerini getirme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function deleteUncheckedDers(uncheckedDers) {
+            try {
+                const response = await fetch(`/api/data/${currentDocumentId}/delete-unchecked-ders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ uncheckedDers })
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Seçilmeyen dersler silinirken hata oluştu');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Ders silme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function deleteUncheckedBlm(uncheckedBlm) {
+            try {
+                const response = await fetch(`/api/data/${currentDocumentId}/delete-unchecked-blm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ uncheckedBlm })
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Seçilmeyen bölümler silinirken hata oluştu');
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Bölüm silme hatası:', error);
+                throw error;
+            }
+        }
+
+        async function saveDersSelection() {
+            const checkboxes = document.querySelectorAll('#dersCheckboxList input[type="checkbox"]');
+            const uncheckedDers = Array.from(checkboxes)
+                .filter(cb => !cb.checked)
+                .map(cb => cb.value);
+
+            if (uncheckedDers.length > 0) {
+                try {
+                    await deleteUncheckedDers(uncheckedDers);
+                    localStorage.setItem('fifthBoxCompleted', 'true');
+                    closeModal('dersModal');
+                    window.location.reload();
+                } catch (error) {
+                    alert('Seçilmeyen dersler silinirken hata oluştu: ' + error.message);
+                }
+            } else {
+                localStorage.setItem('fifthBoxCompleted', 'true');
+                closeModal('dersModal');
+                window.location.reload();
+            }
+        }
+
+        async function saveBlmSelection() {
+            const checkboxes = document.querySelectorAll('#blmCheckboxList input[type="checkbox"]');
+            const uncheckedBlm = Array.from(checkboxes)
+                .filter(cb => !cb.checked)
+                .map(cb => cb.value);
+
+            if (uncheckedBlm.length > 0) {
+                try {
+                    await deleteUncheckedBlm(uncheckedBlm);
+                    localStorage.setItem('sixthBoxCompleted', 'true');
+                    closeModal('blmModal');
+                    window.location.reload();
+                } catch (error) {
+                    alert('Seçilmeyen bölümler silinirken hata oluştu: ' + error.message);
+                }
+            } else {
+                localStorage.setItem('sixthBoxCompleted', 'true');
+                closeModal('blmModal');
+                window.location.reload();
+            }
+        }
+
+        async function handleBoxClick(box, index) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const headers = Array.from(document.querySelectorAll('th[data-column]'))
+                    .map(th => th.getAttribute('data-column'));
+
+                if (index === 0) {
+                    // İlk kutu için orijinal işlevsellik
+                    const targetColumns = headers.filter((_, index) => index >= 8 && index <= 12);
+                    for (const columnName of targetColumns) {
+                        await deleteColumn(currentDocumentId, columnName);
+                    }
+                } else if (index === 1) {
+                    // İkinci kutu için sütun adlarını değiştirme
+                    const newColumnNames = ['tc', 'no', 'ad', 'soyad', 'program', 'sube', 'dkod', 'ders', 'hoca'];
+                    const columnMappings = {};
+                    
+                    for (let i = 0; i < Math.min(9, headers.length); i++) {
+                        columnMappings[headers[i]] = newColumnNames[i];
+                    }
+
+                    await updateColumnNames(currentDocumentId, columnMappings);
+                } else if (index === 2) {
+                    // Üçüncü kutu için işlevsellik
+                    const rows = document.querySelectorAll('tbody tr');
+                    const noColumnIndex = headers.indexOf('no');
+                    
+                    if (noColumnIndex === -1) {
+                        throw new Error('"no" sütunu bulunamadı');
+                    }
+
+                    const extractedData = [];
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        let noValue = cells[noColumnIndex + 1].textContent; // +1 because of action column
+
+                        // 9 karakterden az ise başına 0 ekle
+                        while (noValue.length < 9) {
+                            noValue = '0' + noValue;
+                        }
+
+                        // 4,5,6. karakterleri al
+                        const extractedValue = noValue.substring(3, 6);
+                        extractedData.push(extractedValue);
+
+                        // Hücreyi güncelle
+                        cells[noColumnIndex + 1].textContent = noValue;
+                    });
+
+                    // Yeni sütun ekle
+                    await addNewColumn(currentDocumentId, 'extracted_no', extractedData);
+                } else if (index === 3) {
+                    // Dördüncü kutu için işlevsellik
+                    if (!headers.includes('extracted_no')) {
+                        throw new Error('Önce 3. kutuyu tıklayarak extracted_no sütununu oluşturmalısınız');
+                    }
+                    
+                    // Bölüm kodlarını güncelle
+                    await updateDepartmentCodes(currentDocumentId);
+                } else if (index === 4) {
+                    // Beşinci kutu için işlevsellik
+                    if (!headers.includes('ders')) {
+                        throw new Error('"ders" sütunu bulunamadı');
+                    }
+
+                    const uniqueDers = await fetchUniqueDers();
+                    const checkboxList = document.getElementById('dersCheckboxList');
+                    checkboxList.innerHTML = '';
+
+                    uniqueDers.forEach(ders => {
+                        const li = document.createElement('li');
+                        li.className = 'checkbox-item';
+                        li.innerHTML = `
+                            <input type="checkbox" id="ders_${ders}" value="${ders}" checked>
+                            <label for="ders_${ders}">${ders}</label>
+                        `;
+                        checkboxList.appendChild(li);
+                    });
+
+                    showModal('dersModal');
+                    box.classList.remove('deleting');
+                    return;
+                } else if (index === 5) {
+                    // Altıncı kutu için işlevsellik
+                    if (!headers.includes('blm')) {
+                        throw new Error('"blm" sütunu bulunamadı');
+                    }
+
+                    const uniqueBlm = await fetchUniqueBlm();
+                    const checkboxList = document.getElementById('blmCheckboxList');
+                    checkboxList.innerHTML = '';
+
+                    uniqueBlm.forEach(blm => {
+                        const li = document.createElement('li');
+                        li.className = 'checkbox-item';
+                        li.innerHTML = `
+                            <input type="checkbox" id="blm_${blm}" value="${blm}" checked>
+                            <label for="blm_${blm}">${blm}</label>
+                        `;
+                        checkboxList.appendChild(li);
+                    });
+
+                    showModal('blmModal');
+                    box.classList.remove('deleting');
+                    return;
+                }
+
+                box.classList.remove('deleting');
+                box.classList.add('completed');
+
+                if (index === 0) localStorage.setItem('firstBoxCompleted', 'true');
+                else if (index === 1) localStorage.setItem('secondBoxCompleted', 'true');
+                else if (index === 2) localStorage.setItem('thirdBoxCompleted', 'true');
+                else if (index === 3) localStorage.setItem('fourthBoxCompleted', 'true');
+
+                // Başarılı işlem sonrası sayfayı yenile
+                window.location.reload();
+            } catch (error) {
+                console.error('İşlem hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        function updateRowCount(change = 0) {
+            totalRows += change;
+            document.getElementById('rowCount').textContent = totalRows;
+        }
+
+        async function deleteRow(documentId, rowIndex, button) {
+            const row = button.closest('tr');
+            row.classList.add('row-deleting');
+            updateRowCount(-1);
+
+            try {
+                const response = await fetch(`/api/data/${documentId}/${rowIndex}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.redirect) {
+                        window.location.href = '/std.html';
+                    } else {
+                        setTimeout(() => row.remove(), 150);
+                    }
+                } else {
+                    console.error('Satır silme hatası:', result.message);
+                    row.classList.remove('row-deleting');
+                    updateRowCount(1);
+                }
+            } catch (error) {
+                console.error('Satır silme hatası:', error);
+                row.classList.remove('row-deleting');
+                updateRowCount(1);
+            }
+        }
+
+        async function deleteColumn(documentId, columnName) {
+            const cells = document.querySelectorAll(`[data-column="${columnName}"]`);
+            cells.forEach(cell => cell.classList.add('column-deleting'));
+
+            try {
+                const response = await fetch(`/api/data/${documentId}/column/${columnName}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    cells.forEach(cell => cell.remove());
+                } else {
+                    console.error('Sütun silme hatası:', result.message);
+                    cells.forEach(cell => cell.classList.remove('column-deleting'));
+                }
+            } catch (error) {
+                console.error('Sütun silme hatası:', error);
+                cells.forEach(cell => cell.classList.remove('column-deleting'));
+                throw error;
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    document.getElementById('tableContainer').innerHTML = 
+                        '<div class="alert alert-info">Henüz yüklenmiş veri bulunmamaktadır.</div>';
+                    window.location.href = '/std.html';
+                    return;
+                }
+
+                const latestData = data[0];
+                currentDocumentId = latestData._id;
+                createBoxes();
+                
+                const fileInfo = document.getElementById('fileInfo');
+                const uploadDate = new Date(latestData.uploadDate).toLocaleString('tr-TR');
+                fileInfo.innerHTML = `Son yüklenen dosya: ${latestData.fileName} (${uploadDate})`;
+
+                if (!Array.isArray(latestData.data) || latestData.data.length === 0) {
+                    document.getElementById('tableContainer').innerHTML = 
+                        '<div class="alert alert-warning">Veri formatı geçersiz.</div>';
+                    return;
+                }
+
+                totalRows = latestData.data.length;
+                updateRowCount();
+
+                const headers = Object.keys(latestData.data[0]);
+                
+                let tableHTML = `
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="row-actions">İşlem</th>
+                                ${headers.map(header => `
+                                    <th data-column="${header}">
+                                        <div class="header-content">
+                                            <span class="header-text">${header}</span>
+                                            <button class="delete-icon" onclick="deleteColumn('${currentDocumentId}', '${header}')" title="Sütunu Sil">-</button>
+                                        </div>
+                                    </th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                latestData.data.forEach((row, index) => {
+                    tableHTML += '<tr>';
+                    tableHTML += `
+                        <td class="row-actions">
+                            <button class="delete-icon" onclick="deleteRow('${currentDocumentId}', ${index}, this)" title="Satırı Sil">-</button>
+                        </td>
+                    `;
+                    headers.forEach(header => {
+                        tableHTML += `<td data-column="${header}">${row[header] || ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                tableHTML += '</tbody></table>';
+                
+                document.getElementById('tableContainer').innerHTML = tableHTML;
+
+                const table = document.querySelector('.table-container');
+                const boxes = document.querySelector('.boxes-container');
+                boxes.style.height = table.offsetHeight + 'px';
+            } catch (error) {
+                document.getElementById('tableContainer').innerHTML = 
+                    '<div class="alert alert-danger">Veriler yüklenirken bir hata oluştu.</div>';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>

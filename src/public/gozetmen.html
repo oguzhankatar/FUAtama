@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gözetmen Listesi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .department-section {
+            margin-bottom: 30px;
+        }
+        .department-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            color: #333;
+        }
+        .department-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-left: 10px;
+        }
+        .department-count::before {
+            content: "(";
+        }
+        .department-count::after {
+            content: " gözetmen)";
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .name-stripe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 45px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        .card p {
+            margin: 5px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #333;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+        .back-button:hover {
+            color: #0d6efd;
+        }
+        #error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            display: none;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(220,53,69,0.1);
+        }
+        .stats-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin-left: 0.5rem;
+        }
+        .analysis-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 20px;
+            border-radius: 50px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .analysis-button:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+        }
+        .analysis-button i {
+            margin-right: 8px;
+        }
+        .total-exams {
+            background-color: #0d6efd;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        .exam-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .exam-type {
+            text-align: center;
+        }
+        .exam-type .count {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .exam-type .label {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+
+    <button class="analysis-button" onclick="showAnalysis()">
+        <i class="fas fa-chart-bar"></i> Analiz
+    </button>
+    
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Gözetmen Listesi</h1>
+        
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i> Veriler yükleniyor...
+        </div>
+        <div id="error"></div>
+        
+        <div id="departmentsContainer">
+            <!-- Department sections will be added here -->
+        </div>
+    </div>
+
+    <!-- Analysis Modal -->
+    <div class="modal fade" id="analysisModal" tabindex="-1" aria-labelledby="analysisModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="analysisModalLabel">Sınav Dağılım Analizi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="analysisContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Analiz yapılıyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let analysisModal;
+
+        function generateDepartmentColor(index) {
+            const colors = [
+                '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0',
+                '#2ec4b6', '#ff9f1c', '#2d6a4f', '#006d77', '#e63946'
+            ];
+            return colors[index % colors.length];
+        }
+
+        async function showAnalysis() {
+            if (!analysisModal) {
+                analysisModal = new bootstrap.Modal(document.getElementById('analysisModal'));
+            }
+            analysisModal.show();
+            
+            try {
+                const response = await fetch('/api/gozetmen/analysis');
+                if (!response.ok) {
+                    throw new Error('Analiz verisi alınamadı');
+                }
+                
+                const data = await response.json();
+                const analysisContent = document.getElementById('analysisContent');
+                
+                let html = `
+                    <div class="total-exams">
+                        <strong>Toplam Sınav Sayısı: ${data.totalExams}</strong>
+                    </div>
+                    <div class="exam-breakdown">
+                        <div class="exam-type">
+                            <div class="count">${data.examBreakdown.lctrExams}</div>
+                            <div class="label">LCTR Sınavları</div>
+                        </div>
+                        <div class="exam-type">
+                            <div class="count">${data.examBreakdown.sorunluExams}</div>
+                            <div class="label">Sorunlu Sınavlar</div>
+                        </div>
+                    </div>
+                `;
+
+                // Group by department
+                const departments = {};
+                data.distribution.forEach(item => {
+                    if (!departments[item.blm]) {
+                        departments[item.blm] = [];
+                    }
+                    departments[item.blm].push(item);
+                });
+
+                Object.entries(departments).sort().forEach(([blm, items]) => {
+                    html += `
+                        <h4 class="mt-4 mb-3">${blm}</h4>
+                        <div class="row">
+                    `;
+                    
+                    items.sort((a, b) => b.examCount - a.examCount).forEach(item => {
+                        html += `
+                            <div class="col-md-6">
+                                <div class="analysis-card">
+                                    <h5>${item.ad} (${item.kisa})</h5>
+                                    <div class="analysis-info">
+                                        <span>Katsayı:</span>
+                                        <span>${item.katsayi.toFixed(2)}</span>
+                                    </div>
+                                    <div class="analysis-info">
+                                        <span>Alacak:</span>
+                                        <span>${item.alacak || 0}</span>
+                                    </div>
+                                    <div class="analysis-info">
+                                        <span>Öngörülen Sınav Sayısı:</span>
+                                        <span class="exam-count">${item.examCount}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                });
+                
+                analysisContent.innerHTML = html;
+            } catch (error) {
+                document.getElementById('analysisContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        Analiz yapılırken bir hata oluştu: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function loadGozetmenData() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const container = document.getElementById('departmentsContainer');
+
+            try {
+                const response = await fetch('/api/gozetmen');
+                if (!response.ok) {
+                    throw new Error('Veri yüklenirken bir hata oluştu');
+                }
+                
+                const gozetmenler = await response.json();
+                
+                if (gozetmenler.length === 0) {
+                    error.textContent = 'Gözetmen verisi bulunamadı';
+                    error.style.display = 'block';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                // Group by department
+                const departments = {};
+                gozetmenler.forEach(gozetmen => {
+                    if (!departments[gozetmen.blm]) {
+                        departments[gozetmen.blm] = [];
+                    }
+                    departments[gozetmen.blm].push(gozetmen);
+                });
+
+                // Create department sections
+                Object.entries(departments).sort().forEach(([blm, gozetmenler], index) => {
+                    const departmentColor = generateDepartmentColor(index);
+                    
+                    const section = document.createElement('div');
+                    section.className = 'department-section';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'department-title';
+                    header.innerHTML = `${blm} <span class="department-count">${gozetmenler.length}</span>`;
+                    
+                    const cardsContainer = document.createElement('div');
+                    cardsContainer.className = 'cards-container';
+                    
+                    gozetmenler.sort((a, b) => a.ad.localeCompare(b.ad)).forEach(gozetmen => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.style.backgroundColor = departmentColor;
+
+                        // Create stripe div
+                        const stripeDiv = document.createElement('div');
+                        stripeDiv.className = 'name-stripe';
+                        stripeDiv.style.backgroundColor = '#fff';
+                        card.appendChild(stripeDiv);
+
+                        card.innerHTML += `
+                            <h3>${gozetmen.ad}</h3>
+                            <p><strong>Kısa Kod:</strong> ${gozetmen.kisa}</p>
+                            <p><strong>Katsayı:</strong> <span class="stats-badge">${gozetmen.katsayi.toFixed(2)}</span></p>
+                            <p><strong>Alacak:</strong> <span class="stats-badge">${gozetmen.alacak || 0}</span></p>
+                            <p><strong>Verecek:</strong> <span class="stats-badge">${gozetmen.verecek || 0}</span></p>
+                        `;
+                        
+                        cardsContainer.appendChild(card);
+                    });
+                    
+                    section.appendChild(header);
+                    section.appendChild(cardsContainer);
+                    container.appendChild(section);
+                });
+
+                loading.style.display = 'none';
+            } catch (error) {
+                console.error('Error loading gozetmen data:', error);
+                error.textContent = 'Veri yüklenirken bir hata oluştu: ' + error.message;
+                error.style.display = 'block';
+                loading.style.display = 'none';
+            }
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadGozetmenData);
+    </script>
+</body>
+</html>

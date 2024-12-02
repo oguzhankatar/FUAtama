@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCTR - Excel Verileri</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            margin: 20px auto;
+            padding: 20px;
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .content-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+        .boxes-container {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 5px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            height: fit-content;
+            margin: 20px 0;
+        }
+        .red-box {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 3px;
+        }
+        .red-box.final {
+            grid-column: 1 / span 9;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .red-box.interactive {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .red-box.deleting {
+            background-color: orange;
+        }
+        .red-box.completed {
+            background-color: #28a745;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            vertical-align: middle;
+        }
+        .btn-group {
+            gap: 10px;
+            display: flex;
+        }
+        .file-info {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .table-responsive {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .delete-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 8px;
+            font-size: 14px;
+            line-height: 1;
+            border: none;
+            padding: 0;
+            transition: background-color 0.15s ease;
+            background-color: #dc3545;
+        }
+        .delete-icon:hover {
+            background-color: #c82333;
+        }
+        .row-actions {
+            white-space: nowrap;
+            width: 1%;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-10px); }
+        }
+        .table-footer {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .row-count {
+            font-weight: 500;
+            color: #0d6efd;
+        }
+        .row-deleting {
+            animation: fadeOut 0.15s ease-out forwards;
+        }
+        .column-deleting {
+            animation: fadeOut 0.15s ease-out forwards;
+        }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 5px;
+        }
+        .header-text {
+            margin: 0;
+            font-weight: 500;
+        }
+        .actions-container {
+            display: flex;
+            gap: 5px;
+        }
+        .highlighted {
+            background-color: #fff3cd !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <div>
+                <h2 class="mb-0">LCTR Excel Verileri</h2>
+                <div id="fileInfo" class="file-info"></div>
+            </div>
+            <div class="actions-container">
+                <div class="btn-group">
+                    <a href="/lctr.html?force=true" class="btn btn-primary">Yeni Dosya Yükle</a>
+                    <button class="btn btn-secondary" onclick="window.location.reload()">Yenile</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="table-container">
+                <div id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                </div>
+                <div id="tableContainer" class="table-responsive"></div>
+                <div id="tableFooter" class="table-footer">
+                    <div class="row-count">
+                        Toplam Satır: <span id="rowCount">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="boxesContainer" class="boxes-container">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDocumentId = null;
+        let totalRows = 0;
+        let lastUploadDate = localStorage.getItem('lastUploadDate');
+
+        function createBoxes() {
+            const container = document.getElementById('boxesContainer');
+            container.innerHTML = '';
+            
+            // Create first 9 boxes
+            for (let i = 0; i < 9; i++) {
+                const box = document.createElement('div');
+                box.className = 'red-box interactive';
+                
+                if (i === 0 && localStorage.getItem('lctrFirstBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 1 && localStorage.getItem('lctrSecondBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 2 && localStorage.getItem('lctrThirdBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 3 && localStorage.getItem('lctrFourthBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 4 && localStorage.getItem('lctrFifthBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 5 && localStorage.getItem('lctrSixthBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 6 && localStorage.getItem('lctrSeventhBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 7 && localStorage.getItem('lctrEighthBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+                if (i === 8 && localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
+                    lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                    box.classList.add('completed');
+                }
+
+                box.onclick = i === 0 ? () => handleFirstBoxClick(box) : 
+                             i === 1 ? () => handleSecondBoxClick(box) :
+                             i === 2 ? () => handleThirdBoxClick(box) :
+                             i === 3 ? () => handleFourthBoxClick(box) :
+                             i === 4 ? () => handleFifthBoxClick(box) :
+                             i === 5 ? () => handleSixthBoxClick(box) :
+                             i === 6 ? () => handleSeventhBoxClick(box) :
+                             i === 7 ? () => handleEighthBoxClick(box) :
+                             () => handleNinthBoxClick(box);
+                
+                container.appendChild(box);
+            }
+
+            // Create the Final box
+            const finalBox = document.createElement('div');
+            finalBox.className = 'red-box interactive final';
+            if (localStorage.getItem('lctrFinalBoxCompleted') === 'true' && 
+                lastUploadDate === localStorage.getItem('currentUploadDate')) {
+                finalBox.classList.add('completed');
+            }
+            finalBox.onclick = () => handleFinalBoxClick(finalBox);
+            container.appendChild(finalBox);
+        }
+
+        async function handleFirstBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const headers = Array.from(document.querySelectorAll('th[data-column]'))
+                    .map(th => th.getAttribute('data-column'));
+
+                // Delete columns 4,5,6,7,9 (adjusting for 0-based index)
+                const targetColumns = [3, 4, 5, 6, 8].map(index => headers[index]).filter(Boolean);
+                
+                for (const columnName of targetColumns) {
+                    await deleteColumn(currentDocumentId, columnName);
+                }
+
+                box.classList.remove('deleting');
+                box.classList.add('completed');
+                localStorage.setItem('lctrFirstBoxCompleted', 'true');
+                localStorage.setItem('currentUploadDate', lastUploadDate);
+
+                // Reload the page to refresh the table
+                window.location.reload();
+            } catch (error) {
+                console.error('İşlem hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleSecondBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/rename-columns`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrSecondBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Sütun yeniden adlandırma hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleThirdBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/update-kon`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrThirdBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Kon sütunu güncelleme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleFourthBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/update-program`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrFourthBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Program sütunu güncelleme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleFifthBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/delete-hrc-rows`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrFifthBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+
+                    if (result.redirect) {
+                        window.location.href = '/lctr.html';
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('HRC satırları silme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleSixthBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/delete-cut-rows`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrSixthBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+
+                    if (result.redirect) {
+                        window.location.href = '/lctr.html';
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Cut satırları silme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleSeventhBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/convert-kon-to-int`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrSeventhBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Kon değerleri dönüştürme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleEighthBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/combine-duplicates`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrEighthBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Satır birleştirme hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleNinthBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            // Highlight kon column
+            const konCells = document.querySelectorAll('td[data-column="kon"]');
+            konCells.forEach(cell => cell.classList.add('highlighted'));
+
+            box.classList.add('deleting');
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/delete-zero-kon-rows`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    box.classList.remove('deleting');
+                    box.classList.add('completed');
+                    localStorage.setItem('lctrNinthBoxCompleted', 'true');
+                    localStorage.setItem('currentUploadDate', lastUploadDate);
+
+                    if (result.redirect) {
+                        window.location.href = '/lctr.html';
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Kon=0 satırları silme hatası:', error);
+                box.classList.remove('deleting');
+                konCells.forEach(cell => cell.classList.remove('highlighted'));
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function handleFinalBoxClick(box) {
+            if (box.classList.contains('completed') || box.classList.contains('deleting')) {
+                return;
+            }
+
+            box.classList.add('deleting');
+
+            try {
+                box.classList.remove('deleting');
+                box.classList.add('completed');
+                localStorage.setItem('lctrFinalBoxCompleted', 'true');
+                localStorage.setItem('currentUploadDate', lastUploadDate);
+                window.location.href = '/final.html';
+            } catch (error) {
+                console.error('Final işlem hatası:', error);
+                box.classList.remove('deleting');
+                alert('İşlem sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+
+        async function deleteRow(documentId, rowIndex, button) {
+            const row = button.closest('tr');
+            row.classList.add('row-deleting');
+            updateRowCount(-1);
+
+            try {
+                const response = await fetch(`/api/lctr/data/${documentId}/${rowIndex}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.redirect) {
+                        window.location.href = '/lctr.html';
+                    } else {
+                        setTimeout(() => row.remove(), 150);
+                    }
+                } else {
+                    console.error('Satır silme hatası:', result.message);
+                    row.classList.remove('row-deleting');
+                    updateRowCount(1);
+                }
+            } catch (error) {
+                console.error('Satır silme hatası:', error);
+                row.classList.remove('row-deleting');
+                updateRowCount(1);
+            }
+        }
+
+        async function deleteColumn(documentId, columnName) {
+            const cells = document.querySelectorAll(`[data-column="${columnName}"]`);
+            cells.forEach(cell => cell.classList.add('column-deleting'));
+
+            try {
+                const response = await fetch(`/api/lctr/data/${documentId}/column/${columnName}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    cells.forEach(cell => cell.remove());
+                } else {
+                    console.error('Sütun silme hatası:', result.message);
+                    cells.forEach(cell => cell.classList.remove('column-deleting'));
+                }
+            } catch (error) {
+                console.error('Sütun silme hatası:', error);
+                cells.forEach(cell => cell.classList.remove('column-deleting'));
+                throw error;
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/lctr/data');
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    document.getElementById('tableContainer').innerHTML = 
+                        '<div class="alert alert-info">Henüz yüklenmiş veri bulunmamaktadır.</div>';
+                    window.location.href = '/lctr.html';
+                    return;
+                }
+
+                const latestData = data[0];
+                currentDocumentId = latestData._id;
+                const newUploadDate = new Date(latestData.uploadDate).getTime().toString();
+                
+                // Reset localStorage if upload date has changed
+                if (lastUploadDate !== newUploadDate) {
+                    localStorage.removeItem('lctrFirstBoxCompleted');
+                    localStorage.removeItem('lctrSecondBoxCompleted');
+                    localStorage.removeItem('lctrThirdBoxCompleted');
+                    localStorage.removeItem('lctrFourthBoxCompleted');
+                    localStorage.removeItem('lctrFifthBoxCompleted');
+                    localStorage.removeItem('lctrSixthBoxCompleted');
+                    localStorage.removeItem('lctrSeventhBoxCompleted');
+                    localStorage.removeItem('lctrEighthBoxCompleted');
+                    localStorage.removeItem('lctrNinthBoxCompleted');
+                    localStorage.removeItem('lctrFinalBoxCompleted');
+                    localStorage.removeItem('currentUploadDate');
+                    lastUploadDate = newUploadDate;
+                    localStorage.setItem('lastUploadDate', lastUploadDate);
+                }
+                
+                createBoxes();
+                
+                const fileInfo = document.getElementById('fileInfo');
+                const uploadDate = new Date(latestData.uploadDate).toLocaleString('tr-TR');
+                fileInfo.innerHTML = `Son yüklenen dosya: (${uploadDate})`;
+
+                if (!Array.isArray(latestData.data) || latestData.data.length === 0) {
+                    document.getElementById('tableContainer').innerHTML = 
+                        '<div class="alert alert-warning">Veri formatı geçersiz.</div>';
+                    return;
+                }
+
+                totalRows = latestData.data.length;
+                updateRowCount();
+
+                const headers = Object.keys(latestData.data[0]);
+                
+                let tableHTML = `
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="row-actions">İşlem</th>
+                                ${headers.map(header => `
+                                    <th data-column="${header}">
+                                        <div class="header-content">
+                                            <span class="header-text">${header}</span>
+                                            <button class="delete-icon" onclick="deleteColumn('${currentDocumentId}', '${header}')" title="Sütunu Sil">-</button>
+                                        </div>
+                                    </th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                latestData.data.forEach((row, index) => {
+                    tableHTML += '<tr>';
+                    tableHTML += `
+                        <td class="row-actions">
+                            <button class="delete-icon" onclick="deleteRow('${currentDocumentId}', ${index}, this)" title="Satırı Sil">-</button>
+                        </td>
+                    `;
+                    headers.forEach(header => {
+                        tableHTML += `<td data-column="${header}">${row[header] || ''}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                tableHTML += '</tbody></table>';
+                
+                document.getElementById('tableContainer').innerHTML = tableHTML;
+
+                const table = document.querySelector('.table-container');
+                const boxes = document.querySelector('.boxes-container');
+                boxes.style.height = table.offsetHeight + 'px';
+            } catch (error) {
+                document.getElementById('tableContainer').innerHTML = 
+                    '<div class="alert alert-danger">Veriler yüklenirken bir hata oluştu.</div>';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function updateRowCount(change = 0) {
+            totalRows += change;
+            document.getElementById('rowCount').textContent = totalRows;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>

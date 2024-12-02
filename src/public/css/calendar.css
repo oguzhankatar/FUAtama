@@ -1,0 +1,335 @@
+:root {
+    --monday-color: #e3f2fd;
+    --tuesday-color: #f3e5f5;
+    --wednesday-color: #e8f5e9;
+    --thursday-color: #fff3e0;
+    --friday-color: #fce4ec;
+    --saturday-color: #f0f4c3;
+    --sunday-color: #ffccbc;
+    --divider-color: #bdc3c7;
+}
+
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.back-button {
+    margin-right: 20px;
+}
+
+.date-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.calendar-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 80px);
+    margin-top: 60px;
+}
+
+.calendar-table {
+    flex: 7;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.problem-cards {
+    flex: 3;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.calendar-cell {
+    min-height: 80px;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin: 2px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 0.9em;
+}
+
+/* Cell content layout */
+.cell-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cell-content .dkodu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.delete-icon {
+    cursor: pointer;
+    color: #dc3545;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 5px;
+}
+
+.delete-icon:hover {
+    opacity: 1;
+}
+
+/* Day-specific cell colors */
+.day-monday .calendar-cell { background-color: var(--monday-color); }
+.day-tuesday .calendar-cell { background-color: var(--tuesday-color); }
+.day-wednesday .calendar-cell { background-color: var(--wednesday-color); }
+.day-thursday .calendar-cell { background-color: var(--thursday-color); }
+.day-friday .calendar-cell { background-color: var(--friday-color); }
+.day-saturday .calendar-cell { background-color: var(--saturday-color); }
+.day-sunday .calendar-cell { background-color: var(--sunday-color); }
+
+/* Day-specific header colors */
+.day-header.day-monday { background-color: var(--monday-color); }
+.day-header.day-tuesday { background-color: var(--tuesday-color); }
+.day-header.day-wednesday { background-color: var(--wednesday-color); }
+.day-header.day-thursday { background-color: var(--thursday-color); }
+.day-header.day-friday { background-color: var(--friday-color); }
+.day-header.day-saturday { background-color: var(--saturday-color); }
+.day-header.day-sunday { background-color: var(--sunday-color); }
+
+/* Time slot colors */
+.time-slot.day-monday { background-color: var(--monday-color); }
+.time-slot.day-tuesday { background-color: var(--tuesday-color); }
+.time-slot.day-wednesday { background-color: var(--wednesday-color); }
+.time-slot.day-thursday { background-color: var(--thursday-color); }
+.time-slot.day-friday { background-color: var(--friday-color); }
+.time-slot.day-saturday { background-color: var(--saturday-color); }
+.time-slot.day-sunday { background-color: var(--sunday-color); }
+
+.problem-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.problem-card[draggable="false"] {
+    cursor: not-allowed;
+}
+
+.problem-card[draggable="true"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.program-bilgisayar { background-color: #e3f2fd !important; }
+.program-elektrik { background-color: #f3e5f5 !important; }
+.program-makine { background-color: #e8f5e9 !important; }
+.program-insaat { background-color: #fff3e0 !important; }
+.program-endustri { background-color: #f3e5f5 !important; }
+
+.student-count {
+    font-size: 0.9rem;
+    color: #666;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.student-count i {
+    color: #2196F3;
+}
+
+.dkodu {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sinif-name {
+    font-weight: bold;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.sinif-kon {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.table > :not(caption) > * > * {
+    padding: 0.25rem;
+    vertical-align: middle;
+}
+
+.day-header {
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+    color: #2c3e50;
+}
+
+.time-slot {
+    text-align: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 5px !important;
+    color: #2c3e50;
+}
+
+.table-responsive {
+    overflow: auto;
+    max-height: calc(100vh - 80px);
+    position: relative;
+}
+
+/* Sticky header styles */
+thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #ffffff;
+}
+
+thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #ffffff;
+}
+
+thead tr:last-child th {
+    position: sticky;
+    top: 38px;
+    z-index: 3;
+    background: #ffffff;
+}
+
+/* Sticky first column styles */
+.first-col {
+    position: sticky;
+    left: 0;
+    background: #ffffff !important;
+    z-index: 2;
+    border-right: 2px solid var(--divider-color);
+}
+
+/* When first column meets header */
+thead .first-col {
+    z-index: 4;
+    background: #ffffff !important;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+
+.day-column-group {
+    border-right: 2px solid var(--divider-color);
+}
+
+/* Scrollbar styles */
+.table-responsive::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Override background for day-specific headers while maintaining white background for first column */
+.day-header.day-monday, .time-slot.day-monday { background-color: var(--monday-color); }
+.day-header.day-tuesday, .time-slot.day-tuesday { background-color: var(--tuesday-color); }
+.day-header.day-wednesday, .time-slot.day-wednesday { background-color: var(--wednesday-color); }
+.day-header.day-thursday, .time-slot.day-thursday { background-color: var(--thursday-color); }
+.day-header.day-friday, .time-slot.day-friday { background-color: var(--friday-color); }
+.day-header.day-saturday, .time-slot.day-saturday { background-color: var(--saturday-color); }
+.day-header.day-sunday, .time-slot.day-sunday { background-color: var(--sunday-color); }
+
+/* Ensure first column always has white background */
+td.first-col, th.first-col {
+    background-color: #ffffff !important;
+}
+
+/* Additional style to ensure white background for classroom cells */
+.first-col .sinif-name,
+.first-col .sinif-kon {
+    background-color: #ffffff;
+}
+
+/* New styles for better course information display */
+.course-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.course-code {
+    font-weight: bold;
+    color: #1a237e;
+}
+
+.course-section {
+    color: #455a64;
+    font-size: 0.9em;
+}
+
+/* Progress indicator for student count */
+.student-progress {
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.student-progress-bar {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.3s ease;
+}

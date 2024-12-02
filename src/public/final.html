@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Sayfası</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .program-section {
+            margin-bottom: 30px;
+        }
+        .program-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            color: #333;
+        }
+        .program-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-left: 10px;
+        }
+        .program-count::before {
+            content: "(";
+        }
+        .program-count::after {
+            content: " ders)";
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: move;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .dkodu-stripe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 45px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        .card p {
+            margin: 5px 0;
+            color: #fff;
+            font-size: 16px;
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #333;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+        .back-button:hover {
+            color: #0d6efd;
+        }
+        .card.dragging {
+            opacity: 0.5;
+        }
+        .card.drag-over {
+            border: 2px dashed #fff;
+        }
+        .dkodu-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .dkodu-item {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .dkodu-item:hover {
+            background-color: #f8f9fa;
+        }
+        .dkodu-item.selected {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            border: none;
+            z-index: 1000;
+        }
+        .fab:hover {
+            transform: scale(1.1);
+            background-color: #0b5ed7;
+        }
+        #addCardButton {
+            right: 30px;
+        }
+        #fillStudentsButton {
+            right: 100px;
+        }
+        .student-count {
+            font-weight: bold;
+            color: #ffc107;
+            cursor: pointer;
+        }
+        .student-count:hover {
+            color: #ffdb4d;
+        }
+        .delete-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            cursor: pointer;
+            z-index: 2;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            font-size: 1.2rem;
+            padding: 5px;
+        }
+        .delete-icon:hover {
+            opacity: 1;
+        }
+        .sube-x-icon {
+            position: absolute;
+            top: 10px;
+            right: 40px;
+            color: white;
+            cursor: pointer;
+            z-index: 2;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            font-size: 1.2rem;
+            padding: 5px;
+        }
+        .sube-x-icon:hover {
+            opacity: 1;
+        }
+        .student-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .student-item {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Geri
+    </a>
+    <div id="loading" class="loading">Yükleniyor...</div>
+    <div id="mainContainer"></div>
+
+    <!-- Add Card Button -->
+    <button id="addCardButton" class="fab" onclick="showAddCardModal()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Fill Students Button -->
+    <button id="fillStudentsButton" class="fab" onclick="fillStudents()">
+        <i class="fas fa-user"></i>
+    </button>
+
+    <!-- Add Card Modal -->
+    <div class="modal fade" id="addCardModal" tabindex="-1" aria-labelledby="addCardModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCardModalLabel">Yeni Kart Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCardForm">
+                        <div class="mb-3">
+                            <label for="dkodu" class="form-label">Ders Kodu</label>
+                            <input type="text" class="form-control" id="dkodu" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sube" class="form-label">Şube</label>
+                            <input type="text" class="form-control" id="sube" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dadi" class="form-label">Ders Adı</label>
+                            <input type="text" class="form-control" id="dadi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="program" class="form-label">Program</label>
+                            <input type="text" class="form-control" id="program" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="kon" class="form-label">Kontenjan</label>
+                            <input type="number" class="form-control" id="kon" required min="1">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="addNewCard()">Ekle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Modal -->
+    <div class="modal fade" id="studentsModal" tabindex="-1" aria-labelledby="studentsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="studentsModalLabel">Öğrenci Listesi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h6>Ders Bilgileri:</h6>
+                        <p id="courseInfo"></p>
+                    </div>
+                    <div class="mb-4">
+                        <h6>Öğrenci Listesi:</h6>
+                        <div id="studentList" class="student-list"></div>
+                    </div>
+                    <form id="addStudentForm" class="mt-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newStudentNo" placeholder="Yeni öğrenci numarası" required>
+                            <button class="btn btn-primary" type="submit">Ekle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merge Modal -->
+    <div class="modal fade" id="mergeModal" tabindex="-1" aria-labelledby="mergeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mergeModalLabel">Birleştirilecek Dersleri Seçin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        Birleştirmek istediğiniz dersleri seçin. İlk seçtiğiniz ders hedef ders olacaktır.
+                    </div>
+                    <div id="dkoduList" class="dkodu-list"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="mergeSelectedCards()">Birleştir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentDocumentId = null;
+        let cardData = [];
+        let selectedCards = [];
+        let mergeModal = null;
+        let addCardModal = null;
+        let studentsModal = null;
+        let currentCardIndex = null;
+        const dkoduColors = new Map();
+        const programColors = new Map();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastUploadDate = localStorage.getItem('lastUploadDate');
+            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
+                                      lastUploadDate === localStorage.getItem('currentUploadDate');
+
+            if (!isNinthBoxCompleted) {
+                alert('Final sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
+                window.location.href = 'lctr.html';
+                return;
+            }
+
+            mergeModal = new bootstrap.Modal(document.getElementById('mergeModal'));
+            addCardModal = new bootstrap.Modal(document.getElementById('addCardModal'));
+            studentsModal = new bootstrap.Modal(document.getElementById('studentsModal'));
+
+            document.getElementById('addStudentForm').addEventListener('submit', handleAddStudent);
+
+            fetchData();
+        });
+
+        function showStudentsModal(index) {
+            currentCardIndex = index;
+            const card = cardData[index];
+            const students = card.ogrenciler || [];
+            
+            // Update course info
+            document.getElementById('courseInfo').innerHTML = `
+                <strong>Ders Kodu:</strong> ${card.dkodu}<br>
+                <strong>Şube:</strong> ${card.sube}<br>
+                <strong>Ders Adı:</strong> ${card.dadi}<br>
+                <strong>Program:</strong> ${card.program}
+            `;
+
+            // Update student list
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = students.length > 0 
+                ? students.map(student => `<div class="student-item">${student}</div>`).join('')
+                : '<div class="alert alert-info">Henüz öğrenci eklenmemiş.</div>';
+
+            // Clear the input field
+            document.getElementById('newStudentNo').value = '';
+
+            studentsModal.show();
+        }
+
+        async function handleAddStudent(e) {
+            e.preventDefault();
+
+            const studentNo = document.getElementById('newStudentNo').value.trim();
+            if (!studentNo) return;
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/${currentCardIndex}/students`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ studentNo })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Öğrenci ekleme hatası');
+                }
+
+                const result = await response.json();
+                
+                // Update the card data and refresh the modal
+                cardData[currentCardIndex] = result.updatedRow;
+                showStudentsModal(currentCardIndex);
+                
+                // Update the student count in the card
+                const cards = document.querySelectorAll('.card');
+                const studentCountElement = cards[currentCardIndex].querySelector('.student-count');
+                studentCountElement.textContent = result.updatedRow.ogrenciler.length;
+
+                // Clear the input field
+                document.getElementById('newStudentNo').value = '';
+            } catch (error) {
+                alert(error.message || 'Öğrenci eklenirken bir hata oluştu');
+            }
+        }
+
+        function createCardElement(item, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.draggable = true;
+            card.dataset.index = index;
+            card.dataset.kon = item.kon;
+            card.dataset.dkodu = item.dkodu;
+            
+            const backgroundColor = getColorForProgram(item.program);
+            card.style.backgroundColor = backgroundColor;
+
+            // Create stripe div
+            const stripeDiv = document.createElement('div');
+            stripeDiv.className = 'dkodu-stripe';
+            stripeDiv.style.backgroundColor = getColorForDkodu(item.dkodu);
+            card.appendChild(stripeDiv);
+
+            // Create delete icon
+            const deleteIcon = document.createElement('i');
+            deleteIcon.className = 'fas fa-trash-alt delete-icon';
+            deleteIcon.addEventListener('click', (e) => deleteCard(index, e));
+            card.appendChild(deleteIcon);
+
+            // Create sube X icon
+            const subeXIcon = document.createElement('i');
+            subeXIcon.className = 'fas fa-exchange-alt sube-x-icon';
+            subeXIcon.title = 'Şubeyi X yap';
+            subeXIcon.addEventListener('click', (e) => updateSubeToX(index, e));
+            card.appendChild(subeXIcon);
+
+            // Create content container
+            const content = document.createElement('div');
+            const studentCount = item.ogrenciler ? item.ogrenciler.length : 0;
+            content.innerHTML = `
+                <h3>${item.dkodu}</h3>
+                <p><strong>Şube:</strong> ${item.sube}</p>
+                <p><strong>Ders Adı:</strong> ${item.dadi}</p>
+                <p><strong>Program:</strong> ${item.program}</p>
+                <p><strong>Kontenjan:</strong> <span class="kontenjan">${item.kon}</span></p>
+                <p><strong>Öğrenci Sayısı:</strong> <span class="student-count" onclick="showStudentsModal(${index})">${studentCount}</span></p>
+            `;
+            card.appendChild(content);
+
+            // Add event listeners
+            card.addEventListener('dblclick', () => showMergeModal(index));
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('dragleave', handleDragLeave);
+            card.addEventListener('drop', handleDrop);
+
+            return card;
+        }
+
+        async function updateSubeToX(index, event) {
+            event.stopPropagation();
+            
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/${index}/sube`, {
+                    method: 'PUT'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Şube güncelleme hatası');
+                }
+
+                await fetchData();
+            } catch (error) {
+                console.error('Şube güncelleme hatası:', error);
+                alert('Şube güncellenirken bir hata oluştu!');
+            }
+        }
+
+        async function deleteCard(index, event) {
+            event.stopPropagation();
+            
+            if (!confirm('Bu kartı silmek istediğinize emin misiniz?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/${index}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Kart silme hatası');
+                }
+
+                await fetchData();
+            } catch (error) {
+                console.error('Kart silme hatası:', error);
+                alert('Kart silinirken bir hata oluştu!');
+            }
+        }
+
+        function generateRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 40%)`;
+        }
+
+        function getColorForDkodu(dkodu) {
+            if (!dkoduColors.has(dkodu)) {
+                dkoduColors.set(dkodu, generateRandomColor());
+            }
+            return dkoduColors.get(dkodu);
+        }
+
+        function getColorForProgram(program) {
+            if (!programColors.has(program)) {
+                programColors.set(program, generateRandomColor());
+            }
+            return programColors.get(program);
+        }
+
+        async function fillStudents() {
+            if (!currentDocumentId) {
+                alert('Veri bulunamadı!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/fill-students`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Öğrenci listesi doldurma hatası');
+                }
+
+                const result = await response.json();
+                await fetchData();
+            } catch (error) {
+                console.error('Öğrenci listesi doldurma hatası:', error);
+                alert('Öğrenci listesi doldurulurken bir hata oluştu!');
+            }
+        }
+
+        function showAddCardModal() {
+            document.getElementById('addCardForm').reset();
+            addCardModal.show();
+        }
+
+        async function addNewCard() {
+            const form = document.getElementById('addCardForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const newCard = {
+                dkodu: document.getElementById('dkodu').value,
+                sube: document.getElementById('sube').value,
+                dadi: document.getElementById('dadi').value,
+                program: document.getElementById('program').value,
+                kon: parseInt(document.getElementById('kon').value)
+            };
+
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/card`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newCard)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Kart ekleme hatası');
+                }
+
+                await fetchData();
+                addCardModal.hide();
+            } catch (error) {
+                console.error('Kart ekleme hatası:', error);
+                alert('Kart eklenirken bir hata oluştu!');
+            }
+        }
+
+        function showMergeModal(sourceIndex) {
+            const dkoduList = document.getElementById('dkoduList');
+            dkoduList.innerHTML = '';
+            selectedCards = [];
+
+            cardData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'dkodu-item';
+                div.textContent = `${item.dkodu} - Şube: ${item.sube} (${item.program})`;
+                div.dataset.index = index;
+
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected');
+                    const cardIndex = parseInt(div.dataset.index);
+                    
+                    if (div.classList.contains('selected')) {
+                        if (!selectedCards.includes(cardIndex)) {
+                            selectedCards.push(cardIndex);
+                        }
+                    } else {
+                        selectedCards = selectedCards.filter(idx => idx !== cardIndex);
+                    }
+                });
+
+                dkoduList.appendChild(div);
+            });
+
+            mergeModal.show();
+        }
+
+        async function mergeSelectedCards() {
+            if (selectedCards.length < 2) {
+                alert('En az iki ders seçmelisiniz!');
+                return;
+            }
+
+            try {
+                const targetIndex = selectedCards[0];
+                const sourceIndices = selectedCards.slice(1);
+                
+                const totalKon = selectedCards.reduce((sum, index) => {
+                    return sum + parseInt(cardData[index].kon);
+                }, 0);
+
+                const updateResponse = await fetch(`/api/lctr/data/${currentDocumentId}/${targetIndex}/kontenjan`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ kontenjan: totalKon })
+                });
+
+                if (!updateResponse.ok) {
+                    throw new Error('Kontenjan güncelleme hatası');
+                }
+
+                for (const index of sourceIndices.sort((a, b) => b - a)) {
+                    const deleteResponse = await fetch(`/api/lctr/data/${currentDocumentId}/${index}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!deleteResponse.ok) {
+                        throw new Error('Kart silme hatası');
+                    }
+                }
+
+                await fetchData();
+                mergeModal.hide();
+            } catch (error) {
+                console.error('Birleştirme hatası:', error);
+                alert('Birleştirme işlemi sırasında bir hata oluştu!');
+            }
+        }
+
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (!e.target.closest('.card').classList.contains('dragging')) {
+                e.target.closest('.card').classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.target.closest('.card').classList.remove('drag-over');
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            const dropTarget = e.target.closest('.card');
+            const draggedCard = document.querySelector('.dragging');
+            
+            if (draggedCard && dropTarget && draggedCard !== dropTarget) {
+                dropTarget.classList.remove('drag-over');
+                
+                const draggedKon = parseInt(draggedCard.dataset.kon);
+                const targetKon = parseInt(dropTarget.dataset.kon);
+                
+                const newKon = draggedKon + targetKon;
+
+                const draggedIndex = parseInt(draggedCard.dataset.index);
+                const targetIndex = parseInt(dropTarget.dataset.index);
+
+                try {
+                    const updateResponse = await fetch(`/api/lctr/data/${currentDocumentId}/${targetIndex}/kontenjan`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ kontenjan: newKon })
+                    });
+
+                    if (!updateResponse.ok) {
+                        const errorData = await updateResponse.json();
+                        throw new Error(errorData.message || 'Kontenjan güncelleme hatası');
+                    }
+
+                    const deleteResponse = await fetch(`/api/lctr/data/${currentDocumentId}/${draggedIndex}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (deleteResponse.ok) {
+                        await fetchData();
+                    } else {
+                        const errorData = await deleteResponse.json();
+                        throw new Error(errorData.message || 'Kart silme hatası');
+                    }
+                } catch (error) {
+                    console.error('İşlem hatası:', error);
+                    alert(error.message || 'Bir hata oluştu!');
+                }
+            }
+        }
+
+        function createCards(data) {
+            cardData = [...data];
+            const mainContainer = document.getElementById('mainContainer');
+            mainContainer.innerHTML = '';
+
+            dkoduColors.clear();
+
+            const programGroups = cardData.reduce((groups, item) => {
+                const program = item.program || 'Diğer';
+                if (!groups[program]) {
+                    groups[program] = [];
+                }
+                groups[program].push(item);
+                return groups;
+            }, {});
+
+            const sortedPrograms = Object.keys(programGroups).sort();
+
+            sortedPrograms.forEach(program => {
+                const programSection = document.createElement('div');
+                programSection.className = 'program-section';
+
+                const programTitle = document.createElement('div');
+                programTitle.className = 'program-title';
+                programTitle.textContent = `${program} `;
+                
+                const cardCount = document.createElement('span');
+                cardCount.className = 'program-count';
+                cardCount.textContent = programGroups[program].length;
+                
+                programTitle.appendChild(cardCount);
+                programSection.appendChild(programTitle);
+
+                const cardsContainer = document.createElement('div');
+                cardsContainer.className = 'cards-container';
+
+                const sortedCards = programGroups[program].sort((a, b) => a.dkodu.localeCompare(b.dkodu));
+
+                sortedCards.forEach((item, index) => {
+                    const card = createCardElement(item, cardData.indexOf(item));
+                    cardsContainer.appendChild(card);
+                });
+
+                programSection.appendChild(cardsContainer);
+                mainContainer.appendChild(programSection);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/lctr/data');
+                const result = await response.json();
+                
+                if (result.length > 0 && result[0].data) {
+                    currentDocumentId = result[0]._id;
+                    createCards(result[0].data);
+                } else {
+                    document.getElementById('loading').textContent = 'Veri bulunamadı.';
+                }
+            } catch (error) {
+                console.error('Veri çekme hatası:', error);
+                document.getElementById('loading').textContent = 'Veri yüklenirken bir hata oluştu.';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>
