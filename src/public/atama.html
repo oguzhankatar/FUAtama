@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gözetmen Atama</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .exam-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+            height: 100%;
+        }
+        .exam-card.hover-exam {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .exam-card .card-body {
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .exam-card .card-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .exam-card .assignment-info {
+            padding: 0.25rem;
+            border-radius: 4px;
+            margin-bottom: 0.25rem;
+            background-color: #f8f9fa;
+        }
+        .exam-card .badge {
+            font-size: 0.75em;
+            padding: 0.25em 0.5em;
+        }
+        .exam-card .border-top {
+            margin-top: auto;
+            padding-top: 0.5rem;
+        }
+        .exam-card .text-truncate,
+        .classroom-card .text-truncate {
+            max-width: 200px;
+            display: inline-block;
+        }
+        .selected-exam {
+            border: 2px solid #007bff;
+            background-color: #f8f9ff;
+        }
+        .classroom-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9em;
+        }
+        .classroom-card:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .classroom-card .card-body {
+            padding: 0.75rem;
+        }
+        .classroom-card .card-title {
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .classroom-card .badge {
+            font-size: 0.75em;
+            padding: 0.25em 0.5em;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .selected-classroom {
+            border: 2px solid #28a745;
+            background-color: #f8fff8;
+        }
+        .gozetmen-card {
+            margin-bottom: 10px;
+            cursor: pointer;
+            min-height: 200px;
+            transition: all 0.2s ease;
+        }
+        .gozetmen-card:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .gozetmen-card.assigned {
+            background-color: #e9ecef;
+        }
+        .profile-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: block;
+            object-fit: cover;
+            background-color: #333;
+        }
+        .assignments-container {
+            max-height: 80px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .assignment-info {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .btn-link {
+            text-decoration: none;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+        .bi-x-circle-fill {
+            font-size: 0.875rem;
+            opacity: 0.7;
+            transition: all 0.2s;
+            padding: 2px;
+            border-radius: 50%;
+            display: block;
+        }
+        .btn-link:hover .bi-x-circle-fill {
+            opacity: 1;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+        .assignment-info .d-flex {
+            gap: 0.25rem;
+            padding: 2px 0;
+        }
+        .assignment-info small {
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Ana Sayfa</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/fakulte.html">FAKULTE</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/atama.html">ATAMA</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sınavlar Listesi -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="mb-0">Sınavlar</h5>
+                    <span id="assignmentStats" class="ms-2 text-muted small"></span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm" onclick="autoAssignGozetmenler()">
+                        <i class="bi bi-magic"></i> Otomatik Atama
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="openAnalysisModal()">
+                        <i class="bi bi-graph-up"></i> Gözetmen Analiz
+                    </button>
+                </div>
+            </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="examsList" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                            <!-- Sınavlar buraya dinamik olarak eklenecek -->
+                        </div>
+                        <div id="noExamsMessage" class="alert alert-info mt-3" style="display: none;">
+                            Henüz sınav planlaması yapılmamış. Lütfen önce FAKULTE sayfasından sınavları planlayınız.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sınıf Seçimi -->
+            <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Sınıf Seçimi</h5>
+                </div>
+                <div class="card-body">
+                    <div id="classroomsList" class="row row-cols-1 g-2">
+                        <!-- Seçilen sınavın sınıfları buraya dinamik olarak eklenecek -->
+                    </div>
+                    <div id="noClassroomsMessage" class="alert alert-info mt-3" style="display: none;">
+                        Lütfen önce bir sınav seçiniz.
+                    </div>
+                </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Gözetmen Seçim Modalı -->
+    <div class="modal fade" id="supervisorModal" tabindex="-1" role="dialog" aria-labelledby="supervisorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="supervisorModalLabel">Gözetmen Seçimi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" id="gozetmenSearch" class="form-control" placeholder="Gözetmen Ara...">
+                            </div>
+                        </div>
+                        <div id="selectedClassInfo" class="alert alert-info mb-3"></div>
+                        <div id="gozetmenlerList" class="row">
+                            <!-- Gözetmenler buraya dinamik olarak eklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gözetmen Analiz Modalı -->
+    <div class="modal fade" id="analysisModal" tabindex="-1" role="dialog" aria-labelledby="analysisModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="analysisModalLabel">Gözetmen Analizi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" id="analysisGozetmenSearch" class="form-control" placeholder="Gözetmen Ara...">
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-danger" onclick="removeAllAssignmentsForAll()">
+                                    <i class="bi bi-trash"></i> Tüm Gözetmenlerin Atamalarını Sil
+                                </button>
+                            </div>
+                        </div>
+                        <div id="analysisGozetmenlerList" class="row">
+                            <!-- Gözetmenler ve atamaları buraya dinamik olarak eklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Otomatik Atama Progress Modalı -->
+    <div class="modal fade" id="autoAssignProgressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <h5 class="mb-3">Otomatik Atama Yapılıyor</h5>
+                    <div id="autoAssignProgress" class="text-muted"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Atama Onay Modalı -->
+    <div class="modal fade" id="assignmentModal" tabindex="-1" role="dialog" aria-labelledby="assignmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignmentModalLabel">Gözetmen Ataması</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Seçilen gözetmeni bu sınıfa atamak istediğinize emin misiniz?</p>
+                    <div id="assignmentDetails"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="confirmAssignment" onclick="assignGozetmen()">Onayla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/atama.js"></script>
+</body>
+</html>

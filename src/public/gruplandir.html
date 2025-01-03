@@ -1,13 +1,43 @@
 <!DOCTYPE html>
 <html lang="tr">
-<!-- Previous head content remains the same until the total-student-counter style -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gruplandır</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* All previous styles remain the same until total-student-counter */
+        .ungroup-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            z-index: 2;
+        }
+
+        .ungroup-button:hover {
+            background-color: #c82333;
+        }
+
+        .program-filter {
+            padding: 10px 20px;
+            margin-bottom: 10px;
+        }
+
+        .program-filter select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 1rem;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -198,7 +228,6 @@
             font-style: italic;
         }
 
-        /* Updated styles for the total student counter */
         .total-student-counter {
             position: fixed;
             bottom: 20px;
@@ -246,13 +275,17 @@
     <div class="split-container" id="splitContainer">
         <div class="panel" id="initialPanel">
             <div class="panel-title">Mevcut Dersler</div>
-            <div class="info-text">Sadece öğrenci sayısı 40'ın altında olan dersler gösterilmektedir</div>
+            <div class="program-filter">
+                <select id="programFilter" class="form-select">
+                    <option value="all">Tüm Programlar</option>
+                </select>
+            </div>
+            <div class="info-text">Tüm dersler gösterilmektedir</div>
             <div id="loading" class="loading">Yükleniyor...</div>
             <div id="leftContainer"></div>
         </div>
     </div>
 
-    <!-- Updated total student counter element -->
     <div class="total-student-counter not-clickable" id="totalStudentCounter">
         <i class="fas fa-users"></i>
         <span>Toplam Öğrenci: <span id="totalStudentCount">0</span></span>
@@ -264,30 +297,48 @@
         let selectedCards = new Map();
         const dkoduColors = new Map();
         const programColors = new Map();
-        const STUDENT_LIMIT = 40;
+        const STUDENT_LIMIT = 999999; // No practical limit
 
-        // Function to view selected cards
+        async function ungroupCourse(groupDkodu) {
+            try {
+                const response = await fetch('/api/merge/ungroup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ groupDkodu })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Dersler başarıyla ayrıldı');
+                    location.reload();
+                } else {
+                    throw new Error(result.error || 'Dersler ayrılırken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Ungroup error:', error);
+                alert(error.message || 'Dersler ayrılırken bir hata oluştu');
+            }
+        }
+
         function viewSelectedCards() {
             const totalStudents = parseInt(document.getElementById('totalStudentCount').textContent);
-            if (totalStudents >= 1 && totalStudents <= 40) {
-                // Convert Map to Array and store in localStorage
+            if (totalStudents >= 1) {
                 const selectedCardsArray = Array.from(selectedCards.values());
                 localStorage.setItem('selectedCards', JSON.stringify(selectedCardsArray));
-                
-                // Redirect to selected cards page
                 window.location.href = 'selected-cards.html';
             }
         }
 
-        // Function to update total student count and counter style
         function updateTotalStudentCount() {
             const totalStudents = Array.from(selectedCards.values())
                 .reduce((total, card) => total + (card.ogrenciler ? card.ogrenciler.length : 0), 0);
             const counterElement = document.getElementById('totalStudentCounter');
             document.getElementById('totalStudentCount').textContent = totalStudents;
 
-            // Update counter style based on total students
-            if (totalStudents >= 1 && totalStudents <= 40) {
+            if (totalStudents >= 1) {
                 counterElement.classList.remove('not-clickable');
                 counterElement.classList.add('clickable');
                 counterElement.onclick = viewSelectedCards;
@@ -298,21 +349,6 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (!isNinthBoxCompleted) {
-                alert('Bu sayfaya erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-                return;
-            }
-
-            fetchData();
-        });
-
-        // Rest of the JavaScript code remains the same
         function generateRandomColor() {
             const hue = Math.floor(Math.random() * 360);
             return `hsl(${hue}, 70%, 40%)`;
@@ -338,8 +374,7 @@
         }
 
         function isUnderStudentLimit(card) {
-            const studentCount = card.ogrenciler ? card.ogrenciler.length : 0;
-            return studentCount < STUDENT_LIMIT;
+            return true; // Always return true to show all courses
         }
 
         function findCompatibleCards(selectedCardData) {
@@ -348,70 +383,52 @@
                 .flat();
 
             return cardData.filter(card => {
-                if (!isUnderStudentLimit(card)) return false;
                 if (Array.from(selectedCards.values()).includes(card)) return false;
                 return !hasCommonStudents(card.ogrenciler || [], allSelectedStudents);
             });
         }
 
-        function createNewPanel(panelIndex, selectedCardData) {
-            const panel = document.createElement('div');
-            panel.className = 'panel';
-            panel.id = `panel${panelIndex}`;
-
-            const closeButton = document.createElement('div');
-            closeButton.className = 'close-panel';
-            closeButton.innerHTML = '<i class="fas fa-times"></i>';
-            closeButton.onclick = () => closePanel(panelIndex);
-            panel.appendChild(closeButton);
-
-            const title = document.createElement('div');
-            title.className = 'panel-title';
-            title.textContent = `Birleştirilebilir Dersler ${panelIndex}`;
-            panel.appendChild(title);
-
-            const infoText = document.createElement('div');
-            infoText.className = 'info-text';
-            infoText.textContent = 'Sadece öğrenci sayısı 40\'ın altında olan dersler gösterilmektedir';
-            panel.appendChild(infoText);
-
-            const compatibleCards = findCompatibleCards(selectedCardData);
-
-            if (compatibleCards.length === 0) {
-                panel.innerHTML += '<div class="no-matches">Bu dersle birleştirilebilecek ders bulunamadı</div>';
-                return panel;
-            }
-
-            const cardsContainer = document.createElement('div');
-            cardsContainer.className = 'cards-container';
-
-            compatibleCards.forEach((item) => {
-                const card = createCardElement(item, cardData.indexOf(item), panelIndex);
-                cardsContainer.appendChild(card);
-            });
-
-            panel.appendChild(cardsContainer);
-            return panel;
-        }
-
-        function closePanel(panelIndex) {
-            const splitContainer = document.getElementById('splitContainer');
-            const panels = splitContainer.children;
+        function createCardElement(item, index, panelIndex = 0) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
             
-            Array.from(panels).reverse().forEach(panel => {
-                const currentPanelIndex = parseInt(panel.id.replace('panel', '')) || 0;
-                if (currentPanelIndex >= panelIndex) {
-                    splitContainer.removeChild(panel);
-                    selectedCards.delete(currentPanelIndex);
-                }
-            });
+            const backgroundColor = getColorForProgram(item.program);
+            card.style.backgroundColor = backgroundColor;
 
-            if (panelIndex > 0) {
-                const prevPanelCards = document.querySelectorAll(`#panel${panelIndex - 1} .card`);
-                prevPanelCards.forEach(card => card.classList.remove('selected'));
+            const stripeDiv = document.createElement('div');
+            stripeDiv.className = 'dkodu-stripe';
+            stripeDiv.style.backgroundColor = getColorForDkodu(item.dkodu);
+            card.appendChild(stripeDiv);
+
+            if (item.dkodu.startsWith('GRP')) {
+                const ungroupButton = document.createElement('button');
+                ungroupButton.className = 'ungroup-button';
+                ungroupButton.textContent = 'Grubu Boz';
+                ungroupButton.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm('Bu grubu bozmak istediğinize emin misiniz?')) {
+                        ungroupCourse(item.dkodu);
+                    }
+                };
+                card.appendChild(ungroupButton);
             }
 
-            updateTotalStudentCount();
+            const content = document.createElement('div');
+            const studentCount = item.ogrenciler ? item.ogrenciler.length : 0;
+            content.innerHTML = `
+                <h3>${item.dkodu}</h3>
+                <p><strong>Şube:</strong> ${item.sube}</p>
+                <p><strong>Ders Adı:</strong> ${Array.isArray(item.dadi) ? item.dadi.join('<br>') : item.dadi}</p>
+                <p><strong>Program:</strong> ${item.program}</p>
+                <p><strong>Kontenjan:</strong> ${item.kon}</p>
+                <p><strong>Öğrenci Sayısı:</strong> <span class="student-count">${studentCount}</span></p>
+            `;
+            card.appendChild(content);
+
+            card.addEventListener('click', () => selectCard(card, item, panelIndex));
+
+            return card;
         }
 
         function selectCard(card, cardData, panelIndex) {
@@ -447,44 +464,37 @@
             updateTotalStudentCount();
         }
 
-        function createCardElement(item, index, panelIndex = 0) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.index = index;
+        function populateProgramFilter(data) {
+            const programFilter = document.getElementById('programFilter');
+            const programs = new Set();
+            const programCounts = {};
             
-            const backgroundColor = getColorForProgram(item.program);
-            card.style.backgroundColor = backgroundColor;
+            data.forEach(item => {
+                if (item.program) {
+                    programs.add(item.program);
+                    programCounts[item.program] = (programCounts[item.program] || 0) + 1;
+                }
+            });
 
-            const stripeDiv = document.createElement('div');
-            stripeDiv.className = 'dkodu-stripe';
-            stripeDiv.style.backgroundColor = getColorForDkodu(item.dkodu);
-            card.appendChild(stripeDiv);
-
-            const content = document.createElement('div');
-            const studentCount = item.ogrenciler ? item.ogrenciler.length : 0;
-            content.innerHTML = `
-                <h3>${item.dkodu}</h3>
-                <p><strong>Şube:</strong> ${item.sube}</p>
-                <p><strong>Ders Adı:</strong> ${item.dadi}</p>
-                <p><strong>Program:</strong> ${item.program}</p>
-                <p><strong>Kontenjan:</strong> ${item.kon}</p>
-                <p><strong>Öğrenci Sayısı:</strong> <span class="student-count">${studentCount}</span></p>
-            `;
-            card.appendChild(content);
-
-            card.addEventListener('click', () => selectCard(card, item, panelIndex));
-
-            return card;
+            const sortedPrograms = Array.from(programs).sort();
+            
+            programFilter.innerHTML = `<option value="all">Tüm Programlar (${data.length})</option>`;
+            sortedPrograms.forEach(program => {
+                const option = document.createElement('option');
+                option.value = program;
+                option.textContent = `${program} (${programCounts[program]})`;
+                programFilter.appendChild(option);
+            });
         }
 
-        function createCards(data) {
-            cardData = [...data];
+        function filterCards() {
+            const selectedProgram = document.getElementById('programFilter').value;
             const leftContainer = document.getElementById('leftContainer');
             leftContainer.innerHTML = '';
 
-            dkoduColors.clear();
-
-            const filteredData = cardData.filter(isUnderStudentLimit);
+            const filteredData = cardData.filter(card => 
+                selectedProgram === 'all' || card.program === selectedProgram
+            );
 
             const programGroups = filteredData.reduce((groups, item) => {
                 const program = item.program || 'Diğer';
@@ -525,7 +535,12 @@
                 programSection.appendChild(cardsContainer);
                 leftContainer.appendChild(programSection);
             });
+        }
 
+        function createCards(data) {
+            cardData = [...data];
+            populateProgramFilter(data);
+            filterCards();
             document.getElementById('loading').style.display = 'none';
         }
 
@@ -545,6 +560,141 @@
                 document.getElementById('loading').textContent = 'Veri yüklenirken bir hata oluştu.';
             }
         }
+
+        function createNewPanel(panelIndex, selectedCardData) {
+            const panel = document.createElement('div');
+            panel.className = 'panel';
+            panel.id = `panel${panelIndex}`;
+
+            const closeButton = document.createElement('div');
+            closeButton.className = 'close-panel';
+            closeButton.innerHTML = '<i class="fas fa-times"></i>';
+            closeButton.onclick = () => closePanel(panelIndex);
+            panel.appendChild(closeButton);
+
+            const title = document.createElement('div');
+            title.className = 'panel-title';
+            title.textContent = `Birleştirilebilir Dersler ${panelIndex}`;
+            panel.appendChild(title);
+
+            const programFilter = document.createElement('div');
+            programFilter.className = 'program-filter';
+            const select = document.createElement('select');
+            select.className = 'form-select';
+            select.id = `programFilter${panelIndex}`;
+            programFilter.appendChild(select);
+            panel.appendChild(programFilter);
+
+            const infoText = document.createElement('div');
+            infoText.className = 'info-text';
+            infoText.textContent = 'Tüm dersler gösterilmektedir';
+            panel.appendChild(infoText);
+
+            const compatibleCards = findCompatibleCards(selectedCardData);
+            
+            // Populate program filter with counts
+            const programs = new Set();
+            const programCounts = {};
+            
+            compatibleCards.forEach(item => {
+                if (item.program) {
+                    programs.add(item.program);
+                    programCounts[item.program] = (programCounts[item.program] || 0) + 1;
+                }
+            });
+
+            const sortedPrograms = Array.from(programs).sort();
+            select.innerHTML = `<option value="all">Tüm Programlar (${compatibleCards.length})</option>`;
+            sortedPrograms.forEach(program => {
+                const option = document.createElement('option');
+                option.value = program;
+                option.textContent = `${program} (${programCounts[program]})`;
+                select.appendChild(option);
+            });
+
+            // Create container for cards that will be filtered
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'cards-container';
+            cardsContainer.id = `cardsContainer${panelIndex}`;
+
+            // Add filter change handler
+            select.addEventListener('change', () => {
+                const selectedProgram = select.value;
+                const filteredCards = selectedProgram === 'all' 
+                    ? compatibleCards 
+                    : compatibleCards.filter(card => card.program === selectedProgram);
+
+                // Group cards by program
+                const programGroups = filteredCards.reduce((groups, item) => {
+                    const program = item.program || 'Diğer';
+                    if (!groups[program]) {
+                        groups[program] = [];
+                    }
+                    groups[program].push(item);
+                    return groups;
+                }, {});
+
+                // Clear existing cards
+                cardsContainer.innerHTML = '';
+
+                // Create program sections
+                Object.keys(programGroups).sort().forEach(program => {
+                    const programSection = document.createElement('div');
+                    programSection.className = 'program-section';
+
+                    const programTitle = document.createElement('div');
+                    programTitle.className = 'program-title';
+                    programTitle.textContent = `${program} `;
+                    
+                    const cardCount = document.createElement('span');
+                    cardCount.className = 'program-count';
+                    cardCount.textContent = programGroups[program].length;
+                    
+                    programTitle.appendChild(cardCount);
+                    programSection.appendChild(programTitle);
+
+                    const sectionCards = document.createElement('div');
+                    sectionCards.className = 'cards-container';
+
+                    const sortedCards = programGroups[program].sort((a, b) => 
+                        a.dkodu.localeCompare(b.dkodu)
+                    );
+
+                    sortedCards.forEach((item) => {
+                        const card = createCardElement(item, cardData.indexOf(item), panelIndex);
+                        sectionCards.appendChild(card);
+                    });
+
+                    programSection.appendChild(sectionCards);
+                    cardsContainer.appendChild(programSection);
+                });
+            });
+
+            if (compatibleCards.length === 0) {
+                panel.innerHTML += '<div class="no-matches">Bu dersle birleştirilebilecek ders bulunamadı</div>';
+                return panel;
+            }
+
+            // Initial population of cards
+            select.dispatchEvent(new Event('change'));
+            panel.appendChild(cardsContainer);
+            return panel;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const lastUploadDate = localStorage.getItem('lastUploadDate');
+            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
+                                      lastUploadDate === localStorage.getItem('currentUploadDate');
+
+            if (!isNinthBoxCompleted) {
+                alert('Bu sayfaya erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
+                window.location.href = 'lctr.html';
+                return;
+            }
+
+            fetchData();
+            document.getElementById('programFilter').addEventListener('change', filterCards);
+        });
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </body>

@@ -88,6 +88,46 @@ router.post('/data/:documentId/card', async (req, res) => {
     }
 });
 
+// Delete student endpoint
+router.delete('/data/:documentId/:rowIndex/students/:studentNo', async (req, res) => {
+    try {
+        const { documentId, rowIndex, studentNo } = req.params;
+        
+        const document = await LctrData.findById(documentId);
+        if (!document) {
+            return res.status(404).json({ message: 'Belge bulunamadı' });
+        }
+
+        const index = parseInt(rowIndex);
+        if (index < 0 || index >= document.data.length) {
+            return res.status(400).json({ message: 'Geçersiz satır indeksi' });
+        }
+
+        // Check if student exists
+        if (!document.data[index].ogrenciler || !document.data[index].ogrenciler.includes(studentNo)) {
+            return res.status(404).json({ message: 'Öğrenci bulunamadı' });
+        }
+
+        // Remove the student
+        document.data[index].ogrenciler = document.data[index].ogrenciler.filter(no => no !== studentNo);
+        
+        // Explicitly mark the data array as modified
+        document.markModified('data');
+        
+        await document.save();
+
+        res.status(200).json({ 
+            message: 'Öğrenci başarıyla silindi',
+            updatedRow: document.data[index]
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: 'Öğrenci silme hatası',
+            error: error.message
+        });
+    }
+});
+
 // Add new student endpoint
 router.post('/data/:documentId/:rowIndex/students', async (req, res) => {
     try {
@@ -170,7 +210,7 @@ router.put('/data/:documentId/:rowIndex/kontenjan', async (req, res) => {
     }
 });
 
-// Update sube to X endpoint
+// Update sube endpoint
 router.put('/data/:documentId/:rowIndex/sube', async (req, res) => {
     try {
         const { documentId, rowIndex } = req.params;
@@ -185,8 +225,9 @@ router.put('/data/:documentId/:rowIndex/sube', async (req, res) => {
             return res.status(400).json({ message: 'Geçersiz satır indeksi' });
         }
 
-        // Update the sube value to X
-        document.data[index].sube = 'X';
+        // Update the sube value
+        const { sube } = req.body;
+        document.data[index].sube = sube || 'X';
         
         // Explicitly mark the data array as modified
         document.markModified('data');
@@ -221,22 +262,23 @@ router.post('/data/:documentId/fill-students', async (req, res) => {
             return res.status(404).json({ message: 'TempData bulunamadı' });
         }
 
-        // Create a map of dkodu and sube to student numbers
+        // Create maps for student numbers
         const studentMap = new Map();
-        tempData.data.forEach(item => {
-            if (item.dkodu && item.no && item.sube) {
-                const key = `${item.dkodu}-${item.sube}`;
-                if (!studentMap.has(key)) {
-                    studentMap.set(key, []);
-                }
-                studentMap.get(key).push(item.no);
-            }
-        });
-
-        // Create a map for dkodu-only student lists (for sube 'X' cases)
         const dkoduStudentMap = new Map();
+
+        // First pass: Create maps with student numbers
         tempData.data.forEach(item => {
             if (item.dkodu && item.no) {
+                // For specific sections with matching hoca
+                if (item.sube && item.hoca) {
+                    const key = `${item.dkodu}-${item.sube}-${item.hoca}`;
+                    if (!studentMap.has(key)) {
+                        studentMap.set(key, []);
+                    }
+                    studentMap.get(key).push(item.no);
+                }
+
+                // For dkodu-only cases (sube 'X')
                 if (!dkoduStudentMap.has(item.dkodu)) {
                     dkoduStudentMap.set(item.dkodu, []);
                 }
@@ -251,9 +293,19 @@ router.post('/data/:documentId/fill-students', async (req, res) => {
                 // For sube 'X', use all students for that dkodu
                 students = dkoduStudentMap.get(card.dkodu) || [];
             } else {
-                // For specific sube, use only matching students
-                const key = `${card.dkodu}-${card.sube}`;
-                students = studentMap.get(key) || [];
+                // Try to match with hoca first
+                const keyWithHoca = `${card.dkodu}-${card.sube}-${card.hoca}`;
+                const keyWithoutHoca = `${card.dkodu}-${card.sube}`;
+                
+                // If we have students matching both dkodu-sube-hoca, use those
+                if (studentMap.has(keyWithHoca)) {
+                    students = studentMap.get(keyWithHoca);
+                } else {
+                    // Otherwise, collect all students for this dkodu-sube combination
+                    students = Array.from(studentMap.keys())
+                        .filter(key => key.startsWith(`${card.dkodu}-${card.sube}`))
+                        .reduce((acc, key) => [...acc, ...studentMap.get(key)], []);
+                }
             }
             return {
                 ...card,

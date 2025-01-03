@@ -273,6 +273,23 @@
                         <h6>Öğrenci Listesi:</h6>
                         <div id="studentList" class="student-list"></div>
                     </div>
+                    <div class="mb-4">
+                        <h6>Diğer Kartlar:</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <select id="programFilter" class="form-select form-select-sm" style="width: auto;" onchange="filterCardsByProgram()">
+                                <option value="all">Tüm Programlar</option>
+                            </select>
+                            <button class="btn btn-sm btn-secondary" onclick="prevCards()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="cardPageInfo"></span>
+                            <button class="btn btn-sm btn-secondary" onclick="nextCards()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div id="otherCards" class="d-flex gap-2 overflow-hidden" style="min-height: 150px;">
+                        </div>
+                    </div>
                     <form id="addStudentForm" class="mt-4">
                         <div class="input-group">
                             <input type="text" class="form-control" id="newStudentNo" placeholder="Yeni öğrenci numarası" required>
@@ -315,6 +332,188 @@
         let addCardModal = null;
         let studentsModal = null;
         let currentCardIndex = null;
+        let currentCardPage = 0;
+        const cardsPerPage = 5;
+
+        function filterCardsByProgram() {
+            currentCardPage = 0;
+            showOtherCards();
+        }
+
+        function showOtherCards() {
+            const otherCards = document.getElementById('otherCards');
+            otherCards.innerHTML = '';
+            
+            const currentCard = cardData[currentCardIndex];
+            const currentStudents = currentCard.ogrenciler || [];
+            const selectedProgram = document.getElementById('programFilter').value;
+            
+            // Filter cards that have common students with the current card
+            let filteredCards = cardData.filter((card, index) => {
+                if (index === currentCardIndex) return false;
+                const cardStudents = card.ogrenciler || [];
+                return cardStudents.some(student => currentStudents.includes(student));
+            });
+
+            // Apply program filter if not "all"
+            if (selectedProgram !== 'all') {
+                filteredCards = filteredCards.filter(card => card.program === selectedProgram);
+            }
+
+            const startIndex = currentCardPage * cardsPerPage;
+            const pageCards = filteredCards.slice(startIndex, startIndex + cardsPerPage);
+            
+            pageCards.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                cardDiv.style.flex = '1';
+                cardDiv.style.minWidth = '150px';
+                cardDiv.style.maxWidth = '200px';
+                cardDiv.style.cursor = 'pointer';
+                cardDiv.style.backgroundColor = getColorForProgram(card.program);
+                
+                cardDiv.innerHTML = `
+                    <div class="p-2">
+                        <h6 class="text-white mb-1">${card.dkodu}</h6>
+                        <small class="text-white d-block">Şube: ${card.sube}</small>
+                        <small class="text-white d-block">Program: ${card.program}</small>
+                        <small class="text-white d-block">Öğrenci: ${card.ogrenciler ? card.ogrenciler.length : 0}</small>
+                    </div>
+                `;
+                
+                cardDiv.onclick = () => compareAndDeleteStudents(card);
+                otherCards.appendChild(cardDiv);
+            });
+
+            // Update page info
+            const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+            document.getElementById('cardPageInfo').textContent = 
+                filteredCards.length > 0 
+                    ? `Ortak öğrencili kartlar: ${filteredCards.length} (Sayfa ${currentCardPage + 1} / ${totalPages})`
+                    : 'Ortak öğrencili kart bulunamadı';
+        }
+
+        function prevCards() {
+            const currentCard = cardData[currentCardIndex];
+            const currentStudents = currentCard.ogrenciler || [];
+            const selectedProgram = document.getElementById('programFilter').value;
+            
+            // Filter cards that have common students with the current card
+            let filteredCards = cardData.filter((card, index) => {
+                if (index === currentCardIndex) return false;
+                const cardStudents = card.ogrenciler || [];
+                return cardStudents.some(student => currentStudents.includes(student));
+            });
+
+            // Apply program filter if not "all"
+            if (selectedProgram !== 'all') {
+                filteredCards = filteredCards.filter(card => card.program === selectedProgram);
+            }
+
+            if (currentCardPage > 0) {
+                currentCardPage--;
+                showOtherCards();
+            }
+        }
+
+        function nextCards() {
+            const currentCard = cardData[currentCardIndex];
+            const currentStudents = currentCard.ogrenciler || [];
+            const selectedProgram = document.getElementById('programFilter').value;
+            
+            // Filter cards that have common students with the current card
+            let filteredCards = cardData.filter((card, index) => {
+                if (index === currentCardIndex) return false;
+                const cardStudents = card.ogrenciler || [];
+                return cardStudents.some(student => currentStudents.includes(student));
+            });
+
+            // Apply program filter if not "all"
+            if (selectedProgram !== 'all') {
+                filteredCards = filteredCards.filter(card => card.program === selectedProgram);
+            }
+
+            const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+            if (currentCardPage < totalPages - 1) {
+                currentCardPage++;
+                showOtherCards();
+            }
+        }
+
+        async function compareAndDeleteStudents(selectedCard) {
+            const currentStudents = cardData[currentCardIndex].ogrenciler || [];
+            const selectedStudents = selectedCard.ogrenciler || [];
+            
+            // Find common students
+            const commonStudents = currentStudents.filter(student => selectedStudents.includes(student));
+            
+            if (commonStudents.length === 0) {
+                alert('Ortak öğrenci bulunamadı.');
+                return;
+            }
+
+            // Show loading animation
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+            loadingDiv.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            loadingDiv.style.zIndex = '9999';
+            loadingDiv.innerHTML = `
+                <div class="text-center text-white">
+                    <div class="spinner-border mb-3" role="status"></div>
+                    <h5 class="mb-0">${commonStudents.length} öğrenci siliniyor...</h5>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+
+            try {
+                // Delete common students
+                for (const studentNo of commonStudents) {
+                    try {
+                        const response = await fetch(`/api/lctr/data/${currentDocumentId}/${currentCardIndex}/students/${studentNo}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Öğrenci silme hatası');
+                        }
+
+                        const result = await response.json();
+                        cardData[currentCardIndex] = result.updatedRow;
+                    } catch (error) {
+                        console.error('Öğrenci silme hatası:', error);
+                    }
+                }
+
+                // Remove loading animation
+                loadingDiv.remove();
+
+                // Show success message
+                const successDiv = document.createElement('div');
+                successDiv.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+                successDiv.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                successDiv.style.zIndex = '9999';
+                successDiv.innerHTML = `
+                    <div class="text-center text-white">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h5 class="mb-0">${commonStudents.length} öğrenci silindi</h5>
+                    </div>
+                `;
+                document.body.appendChild(successDiv);
+
+                // Close success message and modal after 1 second
+                setTimeout(() => {
+                    successDiv.remove();
+                    studentsModal.hide();
+                }, 1000);
+
+            } catch (error) {
+                // Remove loading animation in case of error
+                loadingDiv.remove();
+                console.error('Öğrenci silme hatası:', error);
+                alert('Öğrenci silinirken bir hata oluştu');
+            }
+        }
+
         const dkoduColors = new Map();
         const programColors = new Map();
 
@@ -354,13 +553,76 @@
             // Update student list
             const studentList = document.getElementById('studentList');
             studentList.innerHTML = students.length > 0 
-                ? students.map(student => `<div class="student-item">${student}</div>`).join('')
+                ? students.map(student => `
+                    <div class="student-item d-flex justify-content-between align-items-center">
+                        <span>${student}</span>
+                        <i class="fas fa-trash-alt text-danger" style="cursor: pointer;" onclick="deleteStudent('${student}', event)"></i>
+                    </div>`).join('')
                 : '<div class="alert alert-info">Henüz öğrenci eklenmemiş.</div>';
 
             // Clear the input field
             document.getElementById('newStudentNo').value = '';
 
+            // Get cards with common students
+            const currentStudents = card.ogrenciler || [];
+            const cardsWithCommonStudents = cardData.filter((otherCard, index) => {
+                if (index === currentCardIndex) return false;
+                const otherStudents = otherCard.ogrenciler || [];
+                return otherStudents.some(student => currentStudents.includes(student));
+            });
+
+            // Get unique programs from filtered cards
+            const programs = [...new Set(cardsWithCommonStudents.map(card => card.program))].sort();
+
+            // Update program filter dropdown
+            const programFilter = document.getElementById('programFilter');
+            programFilter.innerHTML = '<option value="all">Tüm Programlar</option>';
+            programs.forEach(program => {
+                programFilter.innerHTML += `<option value="${program}">${program}</option>`;
+            });
+
             studentsModal.show();
+            currentCardPage = 0;
+            showOtherCards();
+        }
+
+        async function deleteStudent(studentNo, event) {
+            try {
+                const response = await fetch(`/api/lctr/data/${currentDocumentId}/${currentCardIndex}/students/${studentNo}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Öğrenci silme hatası');
+                }
+
+                const result = await response.json();
+                
+                // Update the card data
+                cardData[currentCardIndex] = result.updatedRow;
+
+                // Remove the student item from DOM directly
+                const studentItem = event.target.closest('.student-item');
+                studentItem.remove();
+
+                // If no students left, show the "no students" message
+                const studentList = document.getElementById('studentList');
+                if (studentList.children.length === 0) {
+                    studentList.innerHTML = '<div class="alert alert-info">Henüz öğrenci eklenmemiş.</div>';
+                }
+                
+                // Update the student count in the card
+                const cards = document.querySelectorAll('.card');
+                const studentCountElement = cards[currentCardIndex].querySelector('.student-count');
+                studentCountElement.textContent = result.updatedRow.ogrenciler.length;
+
+                // Refresh other cards view since student list has changed
+                showOtherCards();
+
+            } catch (error) {
+                alert(error.message || 'Öğrenci silinirken bir hata oluştu');
+            }
         }
 
         async function handleAddStudent(e) {
@@ -436,13 +698,68 @@
             const studentCount = item.ogrenciler ? item.ogrenciler.length : 0;
             content.innerHTML = `
                 <h3>${item.dkodu}</h3>
-                <p><strong>Şube:</strong> ${item.sube}</p>
+                <p><strong>Şube:</strong> <span class="sube-value" onclick="editSube(${index})" style="cursor: pointer; text-decoration: underline;">${item.sube}</span></p>
                 <p><strong>Ders Adı:</strong> ${item.dadi}</p>
                 <p><strong>Program:</strong> ${item.program}</p>
                 <p><strong>Kontenjan:</strong> <span class="kontenjan">${item.kon}</span></p>
                 <p><strong>Öğrenci Sayısı:</strong> <span class="student-count" onclick="showStudentsModal(${index})">${studentCount}</span></p>
             `;
             card.appendChild(content);
+
+            // Add editSube function if it doesn't exist
+            if (typeof window.editSube !== 'function') {
+                window.editSube = async function(index) {
+                    const card = document.querySelector(`.card[data-index="${index}"]`);
+                    const subeSpan = card.querySelector('.sube-value');
+                    const currentValue = subeSpan.textContent;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = currentValue;
+                    input.className = 'form-control form-control-sm';
+                    input.style.width = '60px';
+                    input.style.display = 'inline-block';
+                    
+                    input.onkeydown = async (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const newValue = input.value.trim();
+                            
+                            try {
+                                const response = await fetch(`/api/lctr/data/${currentDocumentId}/${index}/sube`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ sube: newValue })
+                                });
+
+                                if (!response.ok) {
+                                    throw new Error('Şube güncelleme hatası');
+                                }
+
+                                const result = await response.json();
+                                subeSpan.textContent = result.updatedRow.sube;
+                                input.replaceWith(subeSpan);
+                            } catch (error) {
+                                console.error('Şube güncelleme hatası:', error);
+                                alert('Şube güncellenirken bir hata oluştu!');
+                                input.replaceWith(subeSpan);
+                            }
+                        } else if (e.key === 'Escape') {
+                            input.replaceWith(subeSpan);
+                        }
+                    };
+                    
+                    input.onblur = () => {
+                        input.replaceWith(subeSpan);
+                    };
+                    
+                    subeSpan.replaceWith(input);
+                    input.focus();
+                    input.select();
+                };
+            }
 
             // Add event listeners
             card.addEventListener('dblclick', () => showMergeModal(index));
@@ -727,6 +1044,7 @@
 
             dkoduColors.clear();
 
+            // Grupları programa göre ayır
             const programGroups = cardData.reduce((groups, item) => {
                 const program = item.program || 'Diğer';
                 if (!groups[program]) {

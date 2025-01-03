@@ -48,6 +48,9 @@
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0,0,0,0.1);
     overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
 }
 
 .problem-cards {
@@ -65,6 +68,8 @@
     padding: 5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     font-size: 0.9em;
+    overflow: hidden;
+    position: relative;
 }
 
 /* Cell content layout */
@@ -158,10 +163,26 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    margin-bottom: 4px;
 }
 
 .student-count i {
     color: #2196F3;
+}
+
+.total-students {
+    font-size: 0.85rem;
+    color: #666;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.total-students i {
+    color: #4CAF50;
 }
 
 .dkodu {
@@ -202,6 +223,29 @@
     color: #2c3e50;
 }
 
+/* Add time icon styles */
+.fa-plus-circle {
+    color: #2196F3;
+    font-size: 1.2em;
+    margin-left: 10px;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.fa-plus-circle:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    color: #1976D2;
+}
+
+/* Day header content container */
+.day-header > div {
+    padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .time-slot {
     text-align: center;
     font-size: 0.8em;
@@ -240,10 +284,13 @@ thead tr:last-child th {
 
 /* Sticky first column styles */
 .first-col {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
     position: sticky;
     left: 0;
-    background: #ffffff !important;
-    z-index: 2;
+    background: white;
+    z-index: 10;
     border-right: 2px solid var(--divider-color);
 }
 
@@ -333,3 +380,105 @@ td.first-col, th.first-col {
     background: #4caf50;
     transition: width 0.3s ease;
 }
+
+/* Tablo yapısı için temel stiller */
+.calendar-table td:not(.first-col) {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+/* Tablo başlığı için stil */
+.calendar-table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 5;
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 2px solid var(--divider-color);
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tablo başlığındaki ilk hücre için özel stil */
+.calendar-table thead th:first-child {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+/* Gün ayırıcı çizgisi */
+.day-divider {
+    border-right: 2px solid var(--divider-color) !important;
+}
+
+/* Tablo başlığı için genel stiller */
+.calendar-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: white;
+}
+
+/* Gün başlıkları için stil */
+.day-header {
+    height: 40px;
+    padding: 8px 4px !important;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid var(--divider-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Saat başlıkları için stil */
+.time-slot {
+    height: 30px;
+    padding: 4px !important;
+    text-align: center;
+    font-size: 0.9em;
+    border-bottom: 2px solid var(--divider-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Gün başlıkları için genişlik ayarları */
+.calendar-table th[colspan="6"] {
+    width: calc(600px) !important; /* 6 saat dilimi x 100px */
+    min-width: calc(600px) !important;
+    max-width: calc(600px) !important;
+}
+
+/* İlk sütun başlığı için özel stil */
+.calendar-table th.first-col {
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    background: white !important;
+    z-index: 25;
+}
+
+/* Gün ayırıcı çizgisi */
+.day-divider {
+    border-right: 2px solid var(--divider-color) !important;
+}
+
+/* Başlık hücrelerinin arka plan renkleri */
+.day-header.day-monday, .time-slot.day-monday { background-color: var(--monday-color) !important; }
+.day-header.day-tuesday, .time-slot.day-tuesday { background-color: var(--tuesday-color) !important; }
+.day-header.day-wednesday, .time-slot.day-wednesday { background-color: var(--wednesday-color) !important; }
+.day-header.day-thursday, .time-slot.day-thursday { background-color: var(--thursday-color) !important; }
+.day-header.day-friday, .time-slot.day-friday { background-color: var(--friday-color) !important; }
+.day-header.day-saturday, .time-slot.day-saturday { background-color: var(--saturday-color) !important; }
+.day-header.day-sunday, .time-slot.day-sunday { background-color: var(--sunday-color) !important; }

@@ -1,0 +1,471 @@
+/* Print styles */
+@media print {
+    @page {
+        size: landscape;
+        margin: 10mm 5mm;
+    }
+
+    body {
+        padding: 0;
+        margin: 0;
+        -webkit-print-color-adjust: exact;
+    }
+
+    /* Enhanced table printing styles */
+    #examTable {
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+        margin-bottom: 20px;
+        font-size: 11pt;
+    }
+    
+    #examTable thead {
+        display: table-header-group;
+    }
+    
+    #examTable tbody {
+        display: table-row-group;
+    }
+    
+    #examTable tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: auto !important;
+        height: auto !important;
+        min-height: fit-content !important;
+    }
+    
+    #examTable td {
+        padding: 6px;
+        vertical-align: top;
+        line-height: 1.8;
+        border: 1px solid #000 !important;
+        height: auto !important;
+        min-height: fit-content !important;
+        max-height: none !important;
+        overflow: visible;
+    }
+
+    /* Column widths */
+    #examTable td:nth-child(1) { width: 8%; }  /* Kod */
+    #examTable td:nth-child(2) { width: 18%; } /* Ders */
+    #examTable td:nth-child(3) { width: 10%; } /* Tarih */
+    #examTable td:nth-child(4) { width: 7%; }  /* Saat */
+    #examTable td:nth-child(5) {               /* Sınıflar */
+        width: 42%;
+        white-space: normal;
+        word-break: normal;
+        word-wrap: normal;
+        overflow-wrap: normal;
+        text-overflow: ellipsis;
+        font-size: 10pt;
+    }
+    #examTable td:nth-child(6) { width: 15%; } /* Öğretmen */
+
+    /* Force table rows to stay together */
+    #examTable tbody tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    /* Ensure content stays together */
+    #examTable td > * {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Adjust font size for classroom list if too long */
+    #examTable td:nth-child(5):not(:empty) {
+        font-size: 10pt;
+        line-height: 1.1;
+    }
+
+    .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #printBtn, 
+    #downloadWeeklyBtn,
+    #downloadAllWeeklyBtn,
+    #classSelect,
+    .report-header .logo, 
+    h2.text-center.mb-4,
+    .row.justify-content-center.mb-4,
+    .text-right.mb-3,
+    #toggleSupervisors {
+        display: none !important;
+    }
+
+    #reportContainer {
+        display: block !important;
+    }
+
+    .report-header {
+        margin-bottom: 15px;
+    }
+
+    .report-header .program-name {
+        margin: 0;
+        font-size: 16pt;
+        font-weight: bold;
+        padding-bottom: 10px;
+    }
+
+    .report-content {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* General styles */
+.report-content {
+    padding: 30px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.report-header .logo {
+    max-width: 150px;
+    margin-bottom: 20px;
+}
+
+.report-header .program-name {
+    font-size: 24px;
+    margin: 15px 0;
+}
+
+.report-header .report-date {
+    color: #666;
+    font-size: 14px;
+}
+
+.table {
+    border: 2px solid #000;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border: 1px solid #000 !important;
+}
+
+.table td {
+    border: 1px solid #000 !important;
+    vertical-align: middle;
+}
+
+.table thead {
+    border-bottom: 2px solid #000;
+}
+
+/* Hide report container by default */
+#reportContainer.d-none {
+    display: none !important;
+}
+
+/* Program select styling */
+#programSelect {
+    font-size: 16px;
+    height: 45px;
+}
+
+/* Print button styling */
+#printBtn {
+    padding: 8px 20px;
+}
+
+#printBtn i {
+    margin-right: 5px;
+}
+
+/* Weekly Timetable Styles */
+.weekly-view {
+    page-break-before: always;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.timetable {
+    border: 1px solid #000;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.timetable-header {
+    display: grid;
+    grid-template-columns: 80px repeat(5, 1fr);
+    border-bottom: 2px solid #000;
+    width: 100%;
+}
+
+.time-column, .day-column {
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-right: 1px solid #000;
+    line-height: 1.3;
+}
+
+.time-column {
+    background-color: #f8f9fa !important;
+}
+
+.day-column {
+    font-size: 0.9em;
+}
+
+.day-column br {
+    margin: 2px 0;
+}
+
+.timetable-body {
+    display: grid;
+    width: 100%;
+}
+
+.time-slot-row {
+    display: grid;
+    grid-template-columns: 80px repeat(5, 1fr);
+}
+
+.time-slot-row {
+    display: grid;
+    border-bottom: 1px solid #000;
+    min-height: 50px;
+}
+
+.time-label {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-slot {
+    padding: 5px;
+    border-right: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.exam-item {
+    background-color: white !important;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 3px;
+    text-align: center;
+    margin-bottom: 1px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 45px;
+}
+
+.exam-item .exam-code {
+    font-weight: bold;
+    font-size: 0.85em;
+    color: #1976d2;
+}
+
+.exam-item .exam-supervisor {
+    font-size: 0.75em;
+    color: #666;
+    margin-top: 2px;
+    text-align: center;
+    line-height: 1.2;
+    max-height: 2.4em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.day-column {
+    font-size: 0.85em;
+    padding: 5px;
+}
+
+.day-column br {
+    display: block;
+    margin: 3px 0;
+    content: "";
+}
+
+.time-slot-row {
+    min-height: 40px;
+}
+
+.time-label {
+    font-size: 0.85em;
+    padding: 5px;
+    min-width: 80px;
+}
+
+.timetable {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+@media print {
+    /* Force print colors */
+    html {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        forced-color-adjust: none !important;
+    }
+
+    /* Table row colors */
+    #examTable tr[style*="FFE0E0"] { background-color: #FFE0E0 !important; }
+    #examTable tr[style*="E0FFE0"] { background-color: #E0FFE0 !important; }
+    #examTable tr[style*="E0E0FF"] { background-color: #E0E0FF !important; }
+    #examTable tr[style*="FFE0FF"] { background-color: #FFE0FF !important; }
+    #examTable tr[style*="FFFFE0"] { background-color: #FFFFE0 !important; }
+    #examTable tr[style*="E0FFFF"] { background-color: #E0FFFF !important; }
+    #examTable tr[style*="FFE0E6"] { background-color: #FFE0E6 !important; }
+
+    /* Ensure colors print */
+    #examTable tr[style*="background"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        forced-color-adjust: none !important;
+    }
+
+    /* Make cells match row color */
+    #examTable tr td {
+        background-color: transparent !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Ensure cell backgrounds match row backgrounds */
+    #examTable tr[style*="background-color"] td {
+        background-color: inherit !important;
+    }
+
+    /* Day colors - support both RGB and Hex formats */
+    .timetable [style*="FFE0E0"],
+    .timetable [style*="rgb(255, 224, 224)"] { 
+        background-color: #FFE0E0 !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="E0FFE0"],
+    .timetable [style*="rgb(224, 255, 224)"] { 
+        background-color: #E0FFE0 !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="E0E0FF"],
+    .timetable [style*="rgb(224, 224, 255)"] { 
+        background-color: #E0E0FF !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="FFE0FF"],
+    .timetable [style*="rgb(255, 224, 255)"] { 
+        background-color: #FFE0FF !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="FFFFE0"],
+    .timetable [style*="rgb(255, 255, 224)"] { 
+        background-color: #FFFFE0 !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="E0FFFF"],
+    .timetable [style*="rgb(224, 255, 255)"] { 
+        background-color: #E0FFFF !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable [style*="FFE0E6"],
+    .timetable [style*="rgb(255, 224, 230)"] { 
+        background-color: #FFE0E6 !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .timetable {
+        border: 1px solid #000 !important;
+        font-size: 9pt;
+        page-break-inside: avoid;
+        background-color: white !important;
+    }
+
+    .time-column, .day-column {
+        padding: 4px !important;
+    }
+
+    .time-label {
+        padding: 4px !important;
+    }
+
+    .day-slot {
+        padding: 2px !important;
+        min-height: 30px !important;
+    }
+
+    .exam-item {
+        padding: 2px !important;
+        margin-bottom: 1px !important;
+        font-size: 8pt;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    h4 {
+        margin-bottom: 10px !important;
+        font-size: 12pt !important;
+    }
+
+    .report-content {
+        padding: 10px !important;
+    }
+
+    .time-column, .day-column, .time-label, .day-slot {
+        border: 1px solid #000 !important;
+    }
+
+    .time-column, .time-label {
+        background-color: #f8f9fa !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    .exam-item {
+        border: 1px solid #000 !important;
+        background-color: white !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* Ensure all backgrounds are preserved */
+    [style*="background-color"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        forced-color-adjust: none !important;
+    }
+
+    /* Ensure text remains readable on colored backgrounds */
+    tr td, .day-column, .exam-code {
+        color: #000 !important;
+    }
+}

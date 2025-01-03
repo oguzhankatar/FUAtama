@@ -7,28 +7,317 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/calendar.css">
+    <style>
+    
+    
+    
+    
+.problem-section-header {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.problem-section-header h3 {
+    margin: 0;
+    color: #d32f2f;
+    font-size: 1.2rem;
+}
+
+.problem-section-header small {
+    color: #666;
+}
+
+.sorunlu-cards-container {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #fff3f3;
+    border-radius: 8px;
+}
+
+.sorunlu-card {
+    border: 2px solid #ff4444;
+    position: relative;
+}
+
+.sorunlu-badge {
+    position: absolute;
+    top: -10px;
+    right: 5px;
+    background-color: #ff4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.normal-cards-container {
+    padding-top: 15px;
+}
+
+.normal-cards-container h3 {
+    color: #333;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+    
+    .placed-count {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 4px;
+    }
+    
+    .cell-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .sorunlu-cell {
+    background-color: #ffe6e6 !important;
+    border: 2px solid #ff9999 !important;
+    opacity: 0.9;
+    position: relative;
+}
+
+.placement-info {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.sorunlu-placement {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.sorunlu-cell::after {
+    content: "Sorunlu Ders";
+    position: absolute;
+    top: -15px;
+    right: 5px;
+    font-size: 10px;
+    color: #ff4444;
+    background-color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid #ff9999;
+}
+
+.locked {
+    background-color: rgba(255, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+.sorunlu-badge {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    margin-top: 2px;
+}
+
+.filled-cell-counter {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 8px 15px;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-weight: 500;
+    color: #333;
+}
+
+.filled-cell-counter i {
+    margin-right: 8px;
+    color: #0d6efd;
+}
+
+    .filled-cell-counter span {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+
+    /* Program filter styles */
+    .filter-section {
+        position: fixed;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #ffffff;
+        border-left: 4px solid #0d6efd;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        width: 280px;
+        z-index: 1000;
+        display: none;
+        border-radius: 8px 0 0 8px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-toggle {
+        position: fixed;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #0d6efd;
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 8px 0 0 8px;
+        z-index: 1001;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+        transition: background-color 0.3s ease;
+    }
+
+    .filter-toggle:hover {
+        background: #0b5ed7;
+    }
+
+    .filter-section.show {
+        display: block;
+        animation: slideIn 0.3s ease forwards;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translate(100%, -50%);
+        }
+        to {
+            transform: translate(0, -50%);
+        }
+    }
+
+    .filter-section select {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s;
+    }
+
+    .filter-section select:focus {
+        border-color: #0d6efd;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+    }
+
+    /* Program-specific card styles */
+    .program-info {
+        padding: 4px 8px;
+        border-radius: 4px;
+        background-color: rgba(0,0,0,0.05);
+        margin: 4px 0;
+    }
+
+    /* Program-specific colors */
+    .program-tek-yzl { background-color: #e3f2fd !important; }
+    .program-tek-elk { background-color: #f3e5f5 !important; }
+    .program-tek-mak { background-color: #e8f5e9 !important; }
+    .program-tek-ins { background-color: #fff3e0 !important; }
+    .program-tek-oto { background-color: #e1f5fe !important; }
+    .program-tek-met { background-color: #fce4ec !important; }
+    .program-tek-enj { background-color: #f1f8e9 !important; }
+    .program-tek-mkt { background-color: #e8eaf6 !important; }
+    .program-tek-abm { background-color: #fff8e1 !important; }
+    .program-tek-uolp { background-color: #e0f7fa !important; }
+    .program-hrc { background-color: #f9fbe7 !important; }
+    .program-ort { background-color: #f3e5f5 !important; }
+</style>
 </head>
 <body>
     <div class="top-bar">
         <a href="index.html" class="btn btn-primary back-button">
             <i class="fas fa-arrow-left"></i> Ana Menü
         </a>
-        <form class="date-form" id="dateForm">
+        <div class="date-form">
             <div class="input-group">
                 <span class="input-group-text">Başlangıç</span>
-                <input type="date" class="form-control" id="startDate" required>
+                <input type="date" class="form-control" id="startDate" readonly>
             </div>
             <div class="input-group">
                 <span class="input-group-text">Bitiş</span>
-                <input type="date" class="form-control" id="endDate" required>
+                <input type="date" class="form-control" id="endDate" readonly>
             </div>
-            <button type="submit" class="btn btn-primary">Takvimi Oluştur</button>
-        </form>
+        </div>
+        <button onclick="autoPlaceCourses()" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Otomatik Yerleştir
+        </button>
+        <button onclick="clearAllPlacements()" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Temizle
+        </button>
         <button id="saveButton" class="btn btn-success">
             <i class="fas fa-save"></i> Kaydet
         </button>
+        <button id="analyzeButton" class="btn btn-info">
+            <i class="fas fa-chart-bar"></i> Analiz
+        </button>
+        <div class="filled-cell-counter">
+            <i class="fas fa-th"></i> Dolu Hücre: <span id="filledCellCount">0</span>
+        </div>
+        <div class="zoom-controls">
+            <button id="zoomOut" class="btn btn-light" title="Küçült">
+                <i class="fas fa-search-minus"></i>
+                <i class="fas fa-minus"></i>
+            </button>
+            <button id="zoomIn" class="btn btn-light" title="Büyüt">
+                <i class="fas fa-search-plus"></i>
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
     </div>
-
+    <style>
+        .zoom-controls {
+            display: inline-flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        .zoom-controls button {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .zoom-controls button:hover {
+            background-color: #e9ecef;
+        }
+        .zoom-controls button i.fa-search-plus,
+        .zoom-controls button i.fa-search-minus {
+            font-size: 0.9em;
+            color: #666;
+            transition: color 0.2s;
+        }
+        .zoom-controls button i.fa-plus,
+        .zoom-controls button i.fa-minus {
+            font-size: 0.8em;
+            color: #0d6efd;
+            transition: color 0.2s;
+        }
+        .zoom-controls button:hover i {
+            color: #0b5ed7;
+        }
+        .calendar-container {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: auto;
+            padding: 20px;
+            background: white;
+        }
+        .table {
+            transition: transform 0.3s ease;
+            transform-origin: 0 0;
+            margin: 0;
+            width: max-content;
+        }
+    </style>
     <div class="calendar-container">
         <div class="calendar-table">
             <div class="table-responsive">
@@ -43,6 +332,47 @@
             </div>
         </div>
 
+        <div class="filter-toggle" id="filterToggle">
+            <i class="fas fa-filter"></i>
+        </div>
+        <div class="filter-section" id="filterSection">
+            <div class="program-filter-list" id="programFilter">
+                <!-- Program checkboxes will be added here dynamically -->
+            </div>
+            <div class="mt-2 d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-primary" id="selectAll">Tümünü Seç</button>
+                <button type="button" class="btn btn-sm btn-secondary" id="clearFilter">Temizle</button>
+            </div>
+
+            <style>
+                .program-filter-list {
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+                .program-checkbox {
+                    display: flex;
+                    align-items: center;
+                    padding: 8px;
+                    margin: 4px 0;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                }
+                .program-checkbox:hover {
+                    background-color: #f8f9fa;
+                }
+                .program-checkbox input[type="checkbox"] {
+                    margin-right: 10px;
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                }
+                .program-checkbox.active {
+                    background-color: #e9ecef;
+                    font-weight: 500;
+                }
+            </style>
+        </div>
         <div class="problem-cards" id="problemCards">
             <!-- Problem cards will be dynamically added here -->
         </div>
@@ -50,4 +380,89 @@
 
     <script src="js/fakulte.js"></script>
 </body>
+
+<div id="sorunluDerslerContainer"></div>
+
+<!-- Analiz Modal -->
+<div class="modal" id="analysisModal" tabindex="-1" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; pointer-events: all;">
+    <div class="modal-dialog" style="margin: 50px auto; background-color: white; width: 90%; max-width: 600px; border-radius: 8px; position: relative;">
+        <div class="modal-content" style="position: relative; z-index: 1001;">
+            <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid #dee2e6;">
+                <h5 class="modal-title">Sınav Analizi</h5>
+                <button type="button" class="btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.5rem;" onclick="closeAnalysisModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <div class="max-exams-info mb-4">
+                    <h6>En Yoğun Sınav Programı:</h6>
+                    <div id="maxExamsInfo" style="padding: 0.5rem; background-color: #f8f9fa; border-radius: 4px;"></div>
+                </div>
+                <div class="student-search mb-4">
+                    <h6>Öğrenci Sınav Programı Sorgula:</h6>
+                    <div class="input-group">
+                        <input type="text" id="studentNoInput" class="form-control" placeholder="Öğrenci No">
+                        <button class="btn btn-primary" id="searchStudentBtn">Ara</button>
+                    </div>
+                </div>
+                <div id="studentSchedule"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+}
+.modal::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    pointer-events: all;
+}
+.modal-dialog {
+    z-index: 1001;
+    pointer-events: auto;
+}
+.modal-content {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    pointer-events: auto;
+}
+.student-search {
+    position: relative;
+    z-index: 1002;
+    pointer-events: auto;
+}
+.input-group {
+    position: relative;
+    z-index: 1002;
+    pointer-events: auto;
+}
+.input-group input,
+.input-group button {
+    position: relative;
+    z-index: 1002;
+    pointer-events: auto;
+}
+.modal-body {
+    position: relative;
+    z-index: 1001;
+    pointer-events: auto;
+}
+.modal-header {
+    pointer-events: auto;
+}
+#maxExamsInfo {
+    pointer-events: auto;
+}
+#studentSchedule {
+    pointer-events: auto;
+}
+</style>
+
 </html>

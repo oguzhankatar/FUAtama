@@ -3,258 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Seçimi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background-color: #f8f9fa;
-        }
-        .selection-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-        .option-card {
-            text-decoration: none;
-            color: inherit;
-            transition: transform 0.3s ease;
-        }
-        .option-card:hover {
-            transform: translateY(-10px);
-        }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 30px;
-            text-align: center;
-            height: 100%;
-            transition: box-shadow 0.3s ease;
-        }
-        .card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        .icon-container {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            color: #0d6efd;
-        }
-        h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .card p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-    </style>
+    <title>Fırat Üniversitesi - Sınav Yönetim Sistemi</title>
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="icon" type="image/png" href="images/firat-logo.png">
 </head>
 <body>
-    <div class="container selection-container">
-        <h1 class="text-center mb-5">Sistem Seçimi</h1>
-        <div class="row g-4">
-            <div class="col-md-3">
-                <a href="lctr.html" class="option-card">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-file-excel"></i>
-                        </div>
-                        <h3>LCTR</h3>
-                        <p>LCTR Excel veri yükleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="temp.html" class="option-card">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-table"></i>
-                        </div>
-                        <h3>Temp</h3>
-                        <p>Temp Excel veri yükleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToFinal(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-flag-checkered"></i>
-                        </div>
-                        <h3>Final</h3>
-                        <p>Final veri görüntüleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToGruplandir(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-object-group"></i>
-                        </div>
-                        <h3>GRUPLANDIR</h3>
-                        <p>Ders gruplandırma ve düzenleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToOtogruplandir(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-magic"></i>
-                        </div>
-                        <h3>OTOGRUPLANDIR</h3>
-                        <p>Otomatik ders gruplandırma sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToSorunlular(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <h3>SORUNLULAR</h3>
-                        <p>Sorunlu dersleri görüntüleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="gozetmen.html" class="option-card">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <h3>GOZETMEN</h3>
-                        <p>Gözetmen listesi görüntüleme sistemi</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToCalendar(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <h3>TAKVİM</h3>
-                        <p>Sorunlu derslerin takvim görünümü</p>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="#" class="option-card" onclick="checkAndNavigateToFakulte(event)">
-                    <div class="card">
-                        <div class="icon-container">
-                            <i class="fas fa-university"></i>
-                        </div>
-                        <h3>FAKULTE</h3>
-                        <p>Fakülte derslerinin takvim görünümü</p>
-                    </div>
-                </a>
-            </div>
+    <div class="login-container">
+        <img src="images/firat-logo.png" alt="Fırat Üniversitesi Logo" class="logo">
+        <h1 class="title">Sınav Yönetim Sistemi</h1>
+        <div class="button-container">
+            <a href="/auth/google" class="google-btn">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google" class="google-icon">
+                Google ile Giriş Yap
+            </a>
         </div>
+        <div id="error-message" class="error-message"></div>
     </div>
 
     <script>
-        function checkAndNavigateToFinal(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
+        // Error messages for different error types
+        const errorMessages = {
+            'auth_required': 'Lütfen giriş yapınız.',
+            'google_auth_failed': 'Google ile giriş başarısız oldu.',
+            'unauthorized_domain': 'Sadece @firat.edu.tr uzantılı e-posta adresleri ile giriş yapılabilir.',
+            'no_user': 'Kullanıcı bilgileri bulunamadı.',
+            'auth_error': 'Giriş işlemi sırasında bir hata oluştu.',
+            'email_check_error': 'E-posta doğrulama hatası.',
+            'default': 'Giriş başarısız oldu. Lütfen tekrar deneyin.'
+        };
 
-            if (isNinthBoxCompleted) {
-                window.location.href = 'final.html';
-            } else {
-                alert('Final sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
+        // Check for error parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = errorMessages[error] || errorMessages.default;
+            errorMessage.classList.add('show');
         }
 
-        function checkAndNavigateToGruplandir(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (isNinthBoxCompleted) {
-                window.location.href = 'gruplandir.html';
-            } else {
-                alert('GRUPLANDIR sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
-        }
-
-        function checkAndNavigateToOtogruplandir(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (isNinthBoxCompleted) {
-                window.location.href = 'otogruplandir.html';
-            } else {
-                alert('OTOGRUPLANDIR sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
-        }
-
-        function checkAndNavigateToSorunlular(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (isNinthBoxCompleted) {
-                window.location.href = 'sorunlular.html';
-            } else {
-                alert('SORUNLULAR sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
-        }
-
-        function checkAndNavigateToCalendar(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (isNinthBoxCompleted) {
-                window.location.href = 'calendar.html';
-            } else {
-                alert('TAKVİM sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
-        }
-
-        function checkAndNavigateToFakulte(event) {
-            event.preventDefault();
-            
-            // Check if the 9th box is completed in LCTR
-            const lastUploadDate = localStorage.getItem('lastUploadDate');
-            const isNinthBoxCompleted = localStorage.getItem('lctrNinthBoxCompleted') === 'true' && 
-                                      lastUploadDate === localStorage.getItem('currentUploadDate');
-
-            if (isNinthBoxCompleted) {
-                window.location.href = 'fakulte.html';
-            } else {
-                alert('FAKULTE sayfasına erişmek için LCTR sayfasındaki 9. kutunun yeşil olması gerekmektedir.');
-                window.location.href = 'lctr.html';
-            }
-        }
+        // Check authentication status
+        fetch('/auth/status')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.authenticated) {
+                    window.location.href = '/dashboard';
+                }
+            })
+            .catch(error => {
+                console.error('Auth check failed:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'Sunucu bağlantısı başarısız oldu. Lütfen daha sonra tekrar deneyin.';
+                errorMessage.classList.add('show');
+            });
     </script>
 </body>
 </html>

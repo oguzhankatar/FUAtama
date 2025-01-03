@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gözetmen Bazlı Rapor</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/css/report.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Gözetmen Bazlı Rapor</h2>
+        
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <select id="supervisorSelect" class="form-control">
+                    <option value="">Gözetmen Seçiniz</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="reportContainer" class="d-none">
+            <div class="text-right mb-3">
+                <button id="printBtn" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Yazdır
+                </button>
+            </div>
+
+            <div id="reportContent" class="report-content">
+                <div class="report-header">
+                    <img src="/images/firat-logo.png" alt="Fırat Üniversitesi" class="logo">
+                    <h3 class="supervisor-name"></h3>
+                    <p class="report-date"></p>
+                </div>
+                <div class="report-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sıra</th>
+                                <th>Ders Kodu</th>
+                                <th>Ders Adı</th>
+                                <th>Tarih</th>
+                                <th>Saat</th>
+                                <th>Sınıf</th>
+                                <th>Program</th>
+                                <th>Dersin Hocası</th>
+                            </tr>
+                        </thead>
+                        <tbody id="examTable">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="weekly-view mt-5">
+                    <h4 class="text-center mb-4">Haftalık Görünüm</h4>
+                    <div class="timetable">
+                        <div class="timetable-header">
+                            <div class="time-column">Saat</div>
+                            <div class="day-column">Pazartesi</div>
+                            <div class="day-column">Salı</div>
+                            <div class="day-column">Çarşamba</div>
+                            <div class="day-column">Perşembe</div>
+                            <div class="day-column">Cuma</div>
+                        </div>
+                        <div class="timetable-body" id="weeklySchedule">
+                            <!-- Time slots will be added by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/js/supervisorReport.js"></script>
+</body>
+</html>

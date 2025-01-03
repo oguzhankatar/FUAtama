@@ -15,7 +15,20 @@ const gozetmenSchema = new mongoose.Schema({
     verecek: {
         type: Number,
         integer: true  // For integer
-    }
+    },
+    photo: {
+        type: String,  // Base64 encoded image data
+        default: null
+    },
+    assignments: [{
+        dkodu: String,
+        sube: String,
+        dersadi: String,
+        examDate: String,
+        examTime: String,
+        sinif: String,
+        studentCount: Number // That classroom's student count
+    }]
 });
 
 module.exports = mongoose.model('Gozetmen', gozetmenSchema);

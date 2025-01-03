@@ -22,6 +22,24 @@ router.post('/', async (req, res) => {
     }
 });
 
+// GET endpoint to fetch sorunlu data
+router.get('/', async (req, res) => {
+    try {
+        const sorunluDoc = await Sorunlu.findOne().sort({ createdAt: -1 });
+        
+        if (!sorunluDoc) {
+            return res.json({ data: [] });
+        }
+
+        res.json({ data: sorunluDoc.data });
+    } catch (error) {
+        console.error('Sorunlu verileri getirme hatası:', error);
+        res.status(500).json({ 
+            message: 'Sorunlu verileri getirirken bir hata oluştu',
+            error: error.message 
+        });
+    }
+});
 // Delete selected cards from lctrdata
 router.delete('/delete-cards/:id', async (req, res) => {
     try {

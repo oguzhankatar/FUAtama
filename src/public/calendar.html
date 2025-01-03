@@ -13,17 +13,16 @@
         <a href="index.html" class="btn btn-primary back-button">
             <i class="fas fa-arrow-left"></i> Ana Menü
         </a>
-        <form class="date-form" id="dateForm">
+        <div class="date-form">
             <div class="input-group">
                 <span class="input-group-text">Başlangıç</span>
-                <input type="date" class="form-control" id="startDate" required>
+                <input type="date" class="form-control" id="startDate" readonly>
             </div>
             <div class="input-group">
                 <span class="input-group-text">Bitiş</span>
-                <input type="date" class="form-control" id="endDate" required>
+                <input type="date" class="form-control" id="endDate" readonly>
             </div>
-            <button type="submit" class="btn btn-primary">Takvimi Oluştur</button>
-        </form>
+        </div>
         <button id="saveButton" class="btn btn-success">
             <i class="fas fa-save"></i> Kaydet
         </button>

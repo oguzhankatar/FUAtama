@@ -71,7 +71,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             }
             
             return newRow;
-        }).filter(row => row && row.islemKodu !== 'HRC'); // Filter out null rows and HRC rows
+        }).filter(row => row && row.islemKodu !== 'HRC' && row.kay !== 'Sonuçlandırılmadı'); // Filter out null rows, HRC rows, and rows with 'Sonuçlandırılmadı' in kay
 
         if (processedData.length === 0) {
             return res.status(400).json({ 

@@ -17,8 +17,26 @@ router.get('/api/calendar-data', async (req, res) => {
             return res.status(404).json({ message: 'No sorunlu data found' });
         }
 
-        // Ensure sorunlu data is properly structured
-        const sorunluArray = Array.isArray(sorunluData.data) ? sorunluData.data : [];
+        // Ensure sorunlu data is properly structured and convert to plain objects
+        const sorunluArray = Array.isArray(sorunluData.data) ? 
+            sorunluData.data.map(course => {
+                const plainCourse = course.toObject();
+                // Ensure examSlots exists
+                if (!plainCourse.examSlots) {
+                    plainCourse.examSlots = [];
+                }
+                return plainCourse;
+            }) : [];
+
+        console.log('Sending calendar data:', {
+            coursesCount: sorunluArray.length,
+            sinifsCount: sinifsData.length,
+            sampleCourse: sorunluArray[0] ? {
+                dkodu: sorunluArray[0].dkodu,
+                sube: sorunluArray[0].sube,
+                examSlots: sorunluArray[0].examSlots
+            } : null
+        });
 
         // Send the data along with the date range for future use
         res.json({
@@ -39,24 +57,8 @@ router.post('/api/save-exam-schedule', async (req, res) => {
     try {
         const { examData } = req.body;
 
-        if (!Array.isArray(examData)) {
-            return res.status(400).json({ message: 'Invalid exam data format' });
-        }
-
-        // Group exams by dkodu
-        const groupedExams = examData.reduce((acc, exam) => {
-            if (!acc[exam.dkodu]) {
-                acc[exam.dkodu] = {
-                    date: exam.date,
-                    time: exam.time,
-                    siniflar: []
-                };
-            }
-            if (!acc[exam.dkodu].siniflar.includes(exam.sinif)) {
-                acc[exam.dkodu].siniflar.push(exam.sinif);
-            }
-            return acc;
-        }, {});
+        // Ensure examData is an array, even if empty
+        const examArray = Array.isArray(examData) ? examData : [];
 
         // Get the latest Sorunlu document
         const sorunluDoc = await Sorunlu.findOne().sort({ createdAt: -1 });
@@ -64,24 +66,49 @@ router.post('/api/save-exam-schedule', async (req, res) => {
             return res.status(404).json({ message: 'No sorunlu data found' });
         }
 
-        // Update each course in the data array with exam information
-        sorunluDoc.data = sorunluDoc.data.map(course => {
-            const examInfo = groupedExams[course.dkodu];
-            if (examInfo) {
-                return {
-                    ...course,
-                    examDate: examInfo.date,
-                    examTime: examInfo.time,
-                    examSiniflar: examInfo.siniflar
-                };
+        // Create a map to store exam slots for each course
+        const courseExams = new Map();
+        
+        // Group exam slots by course
+        examArray.forEach(exam => {
+            const key = `${exam.dkodu}-${exam.sube}`;
+            if (!courseExams.has(key)) {
+                courseExams.set(key, []);
             }
-            return {
-                ...course,
-                examDate: null,
-                examTime: null,
-                examSiniflar: []
-            };
+            courseExams.get(key).push({
+                date: exam.date,
+                time: exam.time,
+                sinif: exam.sinif
+            });
         });
+
+        console.log('Grouped course exams:', Object.fromEntries(courseExams));
+
+        // Update all courses with exam information
+        sorunluDoc.data = sorunluDoc.data.map(course => {
+            const key = `${course.dkodu}-${course.sube}`;
+            const examSlots = courseExams.get(key) || [];
+            
+            console.log(`Processing course ${key}:`, {
+                examSlots: examSlots,
+                hasExamSlots: examSlots.length > 0
+            });
+
+            // Create a new course object with updated exam information
+            const updatedCourse = {
+                ...course.toObject(),  // Convert to plain object to avoid Mongoose issues
+                examSlots: examSlots,
+                // Keep these for backward compatibility
+                examDate: examSlots.length > 0 ? examSlots[0].date : null,
+                examTime: examSlots.length > 0 ? examSlots[0].time : null,
+                examSiniflar: examSlots.length > 0 ? examSlots.map(slot => slot.sinif) : []
+            };
+
+            console.log(`Updated course data:`, updatedCourse);
+            return updatedCourse;
+        });
+
+        console.log('Final sorunluDoc data:', sorunluDoc.data);
 
         // Save the updated document
         await sorunluDoc.save();

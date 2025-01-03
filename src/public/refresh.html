@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeniden Yükleniyor...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .message {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        <h2>Oturum yenileniyor...</h2>
+        <p>Lütfen bekleyin, yönlendiriliyorsunuz.</p>
+    </div>
+    <script>
+        // Force a complete session refresh
+        fetch('/auth/refresh')
+            .then(() => {
+                window.location.href = '/auth/google';
+            })
+            .catch(error => {
+                console.error('Refresh error:', error);
+                window.location.href = '/';
+            });
+    </script>
+</body>
+</html>

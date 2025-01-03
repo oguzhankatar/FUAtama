@@ -4,11 +4,61 @@ const Gozetmen = require('../models/Gozetmen');
 const LctrData = require('../models/LctrData');
 const Sorunlu = require('../models/Sorunlu');
 
-// Get all gozetmen data
+// Upload photo endpoint
+router.post('/:id/photo', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { photo } = req.body;
+
+        if (!photo) {
+            return res.status(400).json({ message: 'Fotoğraf verisi gerekli' });
+        }
+
+        const gozetmen = await Gozetmen.findById(id);
+        if (!gozetmen) {
+            return res.status(404).json({ message: 'Gözetmen bulunamadı' });
+        }
+
+        gozetmen.photo = photo;
+        await gozetmen.save();
+
+        res.json({ message: 'Fotoğraf başarıyla yüklendi' });
+    } catch (error) {
+        console.error('Fotoğraf yükleme hatası:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Get all gozetmen data with department colors
 router.get('/', async (req, res) => {
     try {
-        const gozetmenler = await Gozetmen.find({});
-        res.json(gozetmenler);
+        // First get unique departments and assign colors
+        const departments = await Gozetmen.distinct('blm');
+        const colors = [
+            '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0',
+            '#2ec4b6', '#ff9f1c', '#2d6a4f', '#006d77', '#e63946',
+            '#2a9d8f', '#e9c46a', '#f4a261', '#264653', '#023047'
+        ];
+        
+        // Create department color mapping
+        const departmentColors = {};
+        departments.forEach((dept, index) => {
+            departmentColors[dept] = colors[index % colors.length];
+        });
+
+        // Get all gozetmen data with assignments
+        const gozetmenler = await Gozetmen.find({})
+            .populate('assignments')
+            .sort({ ad: 1 });
+        
+        // Add department color to each gozetmen
+        const gozetmenlerWithColors = gozetmenler.map(g => {
+            const doc = g.toObject();
+            doc.departmentColor = departmentColors[g.blm];
+            return doc;
+        });
+
+        res.json(gozetmenlerWithColors);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
+        //const conn = await mongoose.connect('mongodb+srv://ogi:oka2323@cluster0.8ftdb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+        const conn = await mongoose.connect('mongodb+srv://ogi:oka2323@cluster0.8ftdb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {            useNewUrlParser: true,
             useUnifiedTopology: true
         });
         console.log(`MongoDB Bağlantısı Başarılı: ${conn.connection.host}`);
